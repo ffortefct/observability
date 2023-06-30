@@ -1,0 +1,424 @@
+namespaceOverride: observability
+
+
+tags:
+  log-and-k8s-metrics: true
+
+
+# Set the gateways and hosts if you are going 
+# to run a service behind the Istio Gateway.
+istioGateway:
+  gateways: []
+  kibana:
+    enabled: false
+    prefix: /observability/kibana/
+    hosts: []
+
+
+kube-state-metrics:
+  # Values:
+  # - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
+  fullnameOverride: kube-state-metrics
+  replicas: 1
+  service:
+    port: 8080
+    # Change to LoadBalancer if replicas are more than one.
+    type: ClusterIP
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+
+
+elastic:
+  # Values:
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
+  eck-elasticsearch:
+    enable: true
+    fullnameOverride: elasticsearch
+    version: 8.9.0-SNAPSHOT
+    annotations:
+      # Remove only if you're using the Elastic Enterprise.
+      eck.k8s.elastic.co/license: basic
+    http:
+      service:
+        spec:
+          type: LoadBalancer
+      tls:
+        selfSignedCertificate:
+          disabled: true
+    nodeSets:
+    - name: masters
+      count: 1
+      config:
+        node.roles: ["master"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name
+          #
+          # storageClassName: local-storage
+    - name: hot
+      count: 1
+      config:
+        node.roles: ["data_hot", "data_content", "ingest"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name
+          #
+          # storageClassName: local-storage
+    - name: warm
+      count: 1
+      config:
+        node.roles: ["data_warm"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name
+          #
+          # storageClassName: local-storage
+    - name: cold
+      count: 1
+      config:
+        node.roles: ["data_cold"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name
+          #
+          # storageClassName: local-storage
+
+  # Values:
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-kibana/values.yaml
+  eck-kibana:
+    enable: true
+    fullnameOverride: kibana
+    version: 8.9.0-SNAPSHOT
+    annotations:
+      # Remove only if you're using the Elastic Enterprise.
+      eck.k8s.elastic.co/license: basic
+    spec:
+      count: 1
+      elasticsearchRef:
+        name: elasticsearch
+      http:
+        # Uncomment if you increase the number of replicas in count.
+        # service:
+        #   spec:
+        #     type: LoadBalancer
+        tls:
+          selfSignedCertificate:
+            disabled: true
+      podTemplate:
+        metadata:
+          labels:
+            version: v1
+          annotations:
+            sidecar.istio.io/inject: "true"
+        spec:
+          containers:
+          - name: kibana
+            env:
+              - name: NODE_OPTIONS
+                value: "--max-old-space-size=2048"
+            resources:
+              limits:
+                memory: 1Gi
+                cpu: 2
+              requests:
+                memory: 1Gi
+                cpu: 1
+      config:
+        # This depends on the namespace where ECK stack is being deployed. 
+        xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-es-http.observability.svc:9200"]
+        xpack.fleet.agents.fleet_server.hosts: ["http://fleet-server-agent-http.observability.svc:8220"]
+        # Uncomment if you going to use Istio Gateway.
+        # server.basePath: "/observability/kibana"
+        xpack.fleet.packages:
+        - name: system
+          version: latest
+        - name: elastic_agent
+          version: latest
+        - name: fleet_server
+          version: latest
+        - name: kubernetes
+          version: latest
+        xpack.fleet.agentPolicies:
+        - name: Fleet Server on ECK policy
+          id: eck-fleet-server
+          namespace: observability
+          monitoring_enabled:
+          - logs
+          - metrics
+          package_policies:
+          - name: fleet_server-1
+            id: fleet_server-1
+            package:
+              name: fleet_server
+        - name: Elastic Agent on ECK policy
+          id: eck-agent
+          namespace: observability
+          monitoring_enabled:
+          - logs
+          - metrics
+          unenroll_timeout: 900
+          package_policies:
+          - package:
+              name: system
+            name: system-1
+          - package:
+              name: kubernetes
+            name: kubernetes-1
+
+  # Values:
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-agent/values.yaml
+  eck-agent:
+    enabled: true
+    version: 8.9.0-SNAPSHOT
+    annotations:
+      # Remove only if you're using the Elastic Enterprise.
+      eck.k8s.elastic.co/license: basic
+    fullnameOverride: elastic
+    spec:
+      policyID: eck-agent
+      kibanaRef:
+        name: kibana
+      elasticsearchRefs: []
+      fleetServerRef:
+        name: fleet-server
+      mode: fleet
+      daemonSet:
+        podTemplate:
+          metadata:
+            annotations:
+              sidecar.istio.io/inject: "false"
+          spec:
+            serviceAccountName: elastic-agent
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            automountServiceAccountToken: true
+            securityContext:
+              runAsUser: 0
+
+  # Values:
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-fleet-server/values.yaml
+  eck-fleet-server:
+    enabled: true
+    version: 8.9.0-SNAPSHOT
+    annotations:
+      # Remove only if you're using the Elastic Enterprise.
+      eck.k8s.elastic.co/license: basic
+    fullnameOverride: "fleet-server"
+    spec:
+      policyID: eck-fleet-server
+      kibanaRef:
+        name: kibana
+      elasticsearchRefs:
+      - name: elasticsearch
+      deployment:
+        replicas: 1
+        podTemplate:
+          metadata:
+            annotations:
+              sidecar.istio.io/inject: "false"
+          spec:
+            serviceAccountName: fleet-server
+            automountServiceAccountToken: true
+            securityContext:
+              runAsUser: 0
+      http:
+        tls:
+          selfSignedCertificate:
+            disabled: true
+

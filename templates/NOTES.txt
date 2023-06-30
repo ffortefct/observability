@@ -1,0 +1,5 @@
+Installed release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+
+Get the Elasticsearch password by running this (username is elastic):
+  kubectl get -n observability secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+

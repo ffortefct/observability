@@ -1,0 +1,15 @@
+---
+{{- if .Values.istioGateway.kibana.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: kibana
+  namespace: observability
+spec:
+  host: kibana-kb-http.observability.svc.cluster.local
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+{{- end }}
+
