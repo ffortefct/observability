@@ -1,0 +1,9 @@
+dependencies:
+- name: kube-state-metrics
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 5.8.1
+- name: eck-stack
+  repository: https://helm.elastic.co
+  version: 0.6.0
+digest: sha256:dd3a25e02308104b8e6af57210846a8fa545f24e904cf857784cbf7ed78e28b7
+generated: "2023-06-30T20:15:48.831794533+01:00"

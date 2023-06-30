@@ -1,0 +1,33 @@
+apiVersion: v2
+name: observability
+description: Observability Architecture
+keywords:
+  - architecture
+  - observability
+  - elasticsearch
+  - kibana
+  - opentelemetry
+  - grafana
+home: https://github.com/ffortefct/observability
+sources:
+  - https://github.com/ffortefct/observability
+maintainers:
+  - name: ffortefct
+    email: f.forte@campus.fct.unl.pt
+type: application
+version: 1.0.0
+kubeVersion: ">=1.24.0-1.27.0"
+appVersion: "1.0.0"
+dependencies:
+  - name: kube-state-metrics
+    version: 5.8.1
+    repository: https://prometheus-community.github.io/helm-charts
+    tags:
+      - log-and-k8s-metrics 
+  - name: eck-stack
+    version: 0.6.0
+    repository: https://helm.elastic.co
+    alias: elastic
+    tags:
+      - log-and-k8s-metrics 
+
