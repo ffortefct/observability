@@ -11,7 +11,7 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /observability/kibana/
+        prefix: {{ .Values.istio.kibana.path }}
     rewrite:
       uri: /
     route:

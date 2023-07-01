@@ -1,16 +1,15 @@
 namespaceOverride: observability
 
 
-tags:
-  log-and-k8s-metrics: true
-
-
 # Set the gateways and hosts if you are going 
 # to run a service behind the Istio Gateway.
 istio:
   gateways: []
   kibana:
     enabled: false
+    # It must to be the same as the path defined
+    # in the server.basePath config field.
+    path: "/observability/kibana"
     hosts: []
 
 
@@ -21,7 +20,6 @@ kube-state-metrics:
   replicas: 1
   service:
     port: 8080
-    # Change to LoadBalancer if replicas are more than one.
     type: ClusterIP
   podAnnotations:
     sidecar.istio.io/inject: "false"
@@ -100,8 +98,7 @@ elastic:
           resources:
             requests:
               storage: 1Gi
-          # Adjust to your storage class name
-          #
+          # Adjust to your storage class name.
           # storageClassName: local-storage
     - name: hot
       count: 1
@@ -158,8 +155,7 @@ elastic:
           resources:
             requests:
               storage: 1Gi
-          # Adjust to your storage class name
-          #
+          # Adjust to your storage class name.
           # storageClassName: local-storage
     - name: warm
       count: 1
@@ -216,8 +212,7 @@ elastic:
           resources:
             requests:
               storage: 1Gi
-          # Adjust to your storage class name
-          #
+          # Adjust to your storage class name.
           # storageClassName: local-storage
     - name: cold
       count: 1
@@ -274,8 +269,7 @@ elastic:
           resources:
             requests:
               storage: 1Gi
-          # Adjust to your storage class name
-          #
+          # Adjust to your storage class name.
           # storageClassName: local-storage
 
   # Values:
