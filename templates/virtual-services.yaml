@@ -1,17 +1,17 @@
 ---
-{{- if .Values.istioGateway.kibana.enabled }}
+{{- if .Values.istio.kibana.enabled }}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: kibana-rule
   namespace: observability
 spec:
-  gateways: {{ .Values.istioGateway.kibana.gateways | toYaml | nindent 2 }}
-  hosts: {{ .Values.istioGateway.kibana.hosts | toYaml | nindent 2 }}
+  gateways: {{ .Values.istio.gateways | toYaml | nindent 2 }}
+  hosts: {{ .Values.istio.kibana.hosts | toYaml | nindent 2 }}
   http:
   - match:
     - uri:
-        prefix: {{ .Values.istioGateway.kibana.prefix }}
+        prefix: /observability/kibana/
     rewrite:
       uri: /
     route:

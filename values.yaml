@@ -7,11 +7,10 @@ tags:
 
 # Set the gateways and hosts if you are going 
 # to run a service behind the Istio Gateway.
-istioGateway:
+istio:
   gateways: []
   kibana:
     enabled: false
-    prefix: /observability/kibana/
     hosts: []
 
 
