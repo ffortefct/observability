@@ -1,10 +1,12 @@
-# Modular way to deactivate sectors.
+# Modular way to activate/deactivate sectors.
 tags:
-  # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and 
-  # rollout CronJobs with Elasticsearch as datastore), OpenTelemetry Collectors and Grafana.
+  # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and rollout CronJobs with
+  # Elasticsearch as datastore), OpenTelemetry Independent Collectors (see otlp-collectors section) and Grafana.
   jaeger-components: false
   # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
   eck-components: false
+  # OpenTelemetry Independent Collectors (the ones configured in the otlp-collectors section).
+  independent-otlp-collector: false
 
 
 # Set the gateways and hosts if you are going 
@@ -23,6 +25,8 @@ elastic-jg-stk:
   # Values:
   # - https://artifacthub.io/packages/helm/elastic/eck-stack/0.6.0
   # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
+  #
+  # Requires the ECK Operator: https://github.com/elastic/cloud-on-k8s/tree/main/deploy
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
@@ -312,6 +316,7 @@ jaeger-stack:
   kafka:
     # Values:
     # - https://artifacthub.io/packages/helm/bitnami/kafka/19.1.5
+    # - https://github.com/bitnami/charts/tree/main/bitnami/kafka
     fullnameOverride: kafka-tracing
     replicaCount: 1
     livenessProbe:
@@ -349,6 +354,7 @@ jaeger-stack:
     zookeeper:
       # Values:
       # - https://artifacthub.io/packages/helm/bitnami/zookeeper/10.2.5
+      # - https://github.com/bitnami/charts/tree/main/bitnami/zookeeper
       enabled: true
       fullnameOverride: zookeeper-kafka-tracing
       replicaCount: 1
@@ -499,6 +505,45 @@ jaeger-stack:
         sidecar.istio.io/inject: "false"
 
 
+otlp-sidecar-collector:
+  # Requires the OpenTelemetry Operator: https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator
+  enabled: false
+  # TODO: fine-tune this.
+
+
+otlp-collector:
+  # Values:
+  # - https://artifacthub.io/packages/helm/opentelemetry-helm/opentelemetry-collector/0.62.0
+  # - https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
+  fullnameOverride: "otlp-independent-collector"
+  mode: daemonset
+  config: {} # TODO: fine-tune this.
+  ports:  {} # TODO: fine-tune this.
+  resources:
+    limits:
+      cpu: 256m
+      memory: 512Mi
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+  livenessProbe:
+    initialDelaySeconds: 40
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
+    terminationGracePeriodSeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 40
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  service:
+    enabled: true
+    # Don't change to LoadBalancer, unless
+    # you pretend to use the deployment mode.
+    type: ClusterIP
+
+
 kube-state-metrics:
   # Values:
   # - https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics/5.8.1
@@ -516,6 +561,8 @@ elastic-eck-stk:
   # Values:
   # - https://artifacthub.io/packages/helm/elastic/eck-stack/0.6.0
   # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
+  #
+  # Requires the ECK Operator: https://github.com/elastic/cloud-on-k8s/tree/main/deploy
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml

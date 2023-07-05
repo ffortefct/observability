@@ -5,8 +5,9 @@ keywords:
   - architecture
   - observability
   - elasticsearch
-  - kibana
+  - jaeger
   - opentelemetry
+  - kibana
   - grafana
 home: https://github.com/ffortefct/observability
 sources:
@@ -31,6 +32,13 @@ dependencies:
     alias: jaeger-stack
     tags:
       - jaeger-components
+  - name: opentelemetry-collector
+    version: 0.62.0
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    alias: otlp-collector
+    tags:
+      - jaeger-components
+      - independent-otlp-collector
   - name: kube-state-metrics
     version: 5.8.1
     repository: https://prometheus-community.github.io/helm-charts

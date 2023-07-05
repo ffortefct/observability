@@ -5,11 +5,14 @@ dependencies:
 - name: jaeger
   repository: https://jaegertracing.github.io/helm-charts
   version: 0.71.7
+- name: opentelemetry-collector
+  repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+  version: 0.62.0
 - name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
   version: 5.8.1
 - name: eck-stack
   repository: https://helm.elastic.co
   version: 0.6.0
-digest: sha256:06a21bfffd347bb4cbc90ca05d9c4d89f7752266cd966ea3245ca1d6a55d45cb
-generated: "2023-07-05T14:36:24.787187171+01:00"
+digest: sha256:791012b67a63ae6025bba96581359b21782d8b77a6028d73fd41b5babe0269b0
+generated: "2023-07-05T23:53:59.022893094+01:00"
