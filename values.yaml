@@ -1,3 +1,12 @@
+# Modular way to deactivate sectors.
+tags:
+  # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and 
+  # rollout CronJobs with Elasticsearch as datastore), OpenTelemetry Collectors and Grafana.
+  jaeger-components: false
+  # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
+  eck-components: false
+
+
 # Set the gateways and hosts if you are going 
 # to run a service behind the Istio Gateway.
 istio:
@@ -10,24 +19,500 @@ istio:
     hosts: []
 
 
+elastic-jg-stk:
+  # Values:
+  # - https://artifacthub.io/packages/helm/elastic/eck-stack/0.6.0
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
+  eck-elasticsearch:
+    # Values:
+    # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
+    enable: true
+    fullnameOverride: elasticsearch-jg-stk
+    version: 7.17.11
+    annotations:
+      # Remove only if you're using the Elastic Enterprise.
+      eck.k8s.elastic.co/license: basic
+    http:
+      service:
+        spec:
+          type: LoadBalancer
+      tls:
+        selfSignedCertificate:
+          disabled: true
+    nodeSets:
+    - name: masters
+      count: 1
+      config:
+        node.roles: ["master"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name.
+          # storageClassName: local-storage
+    - name: hot
+      count: 1
+      config:
+        node.roles: ["data_hot", "data_content", "ingest"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name.
+          # storageClassName: local-storage
+    - name: warm
+      count: 1
+      config:
+        node.roles: ["data_warm"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name.
+          # storageClassName: local-storage
+    - name: cold
+      count: 1
+      config:
+        node.roles: ["data_cold"]
+        # Remove/comment in a production environment (it's true by default).
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+          - name: elasticsearch
+            readinessProbe:
+              exec:
+                command:
+                - bash
+                - -c
+                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+              failureThreshold: 3
+              initialDelaySeconds: 100
+              periodSeconds: 12
+              successThreshold: 1
+              timeoutSeconds: 20
+            env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            resources:
+              limits:
+                cpu: 1
+                memory: 2Gi
+              requests:
+                cpu: 1
+                memory: 2Gi
+          # Uncomment in a prodution environment.
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # initContainers:
+          # - command:
+          #   - sh
+          #   - "-c"
+          #   - sysctl -w vm.max_map_count=262144
+          #   name: sysctl
+          #   securityContext:
+          #     privileged: true
+          #     runAsUser: 0   
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          # Adjust to your storage class name.
+          # storageClassName: local-storage
+
+  # Unused components.
+  eck-kibana:
+    enabled: false
+  eck-agent:
+    enabled: false
+  eck-fleet-server:
+    enabled: false
+
+
+jaeger-stack:
+  # Values:
+  # - https://artifacthub.io/packages/helm/jaegertracing/jaeger/0.71.7
+  # - https://github.com/jaegertracing/helm-charts/blob/main/charts/jaeger/values.yaml
+  provisionDataStore:
+    kafka: true # Used by the injester & indexer.
+    cassandra: false
+    elasticsearch: false
+  fullnameOverride: jaeger-stack
+  storage:
+    type: elasticsearch
+    elasticsearch:
+      host: elasticsearch-jg-stk-es-http.observability.svc
+      port: 9200
+      user: elastic
+      usePassword: true
+      # password: elastic
+      existingSecret: elasticsearch-jg-stk-es-elastic-user
+      existingSecretKey: elastic
+      tls:
+        enabled: false
+    kafka:
+      brokers:
+        - kafka-tracing.observability.svc:9092
+      topic: jaeger-tracing
+      authentication: none
+
+  kafka:
+    # Values:
+    # - https://artifacthub.io/packages/helm/bitnami/kafka/19.1.5
+    fullnameOverride: kafka-tracing
+    replicaCount: 1
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 60
+      timeoutSeconds: 5
+      failureThreshold: 3
+      periodSeconds: 10
+      successThreshold: 1
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 50
+      failureThreshold: 6
+      timeoutSeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+    autoCreateTopicsEnable: true
+    externalAccess:
+      service:
+        type: LoadBalancer
+    persistence:
+      enabled: true
+      # Adjust to your storage class name.
+      # storageClass: local-storage
+      accessModes: ["ReadWriteOnce"]
+      size: 1Gi
+      logPersistence:
+        enabled: false
+        # Adjust to your storage class name.
+        # storageClass: local-storage
+        accessModes: ["ReadWriteOnce"]
+        size: 1Gi
+    zookeeper:
+      # Values:
+      # - https://artifacthub.io/packages/helm/bitnami/zookeeper/10.2.5
+      enabled: true
+      fullnameOverride: zookeeper-kafka-tracing
+      replicaCount: 1
+      livenessProbe:
+        enabled: true
+        initialDelaySeconds: 40
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 6
+        successThreshold: 1
+        probeCommandTimeout: 2
+      readinessProbe:
+        enabled: true
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 6
+        successThreshold: 1
+        probeCommandTimeout: 2
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
+      persistence:
+        enabled: true
+        accessModes: ["ReadWriteOnce"]
+        size: 1Gi
+        dataLogDir:
+          size: 1Gi
+
+  injester:
+    enabled: true
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 2
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+  agent:
+    # OpenTelemetry Collectors
+    # are used as span injestors.
+    enabled: false
+
+  collector:
+    enabled: true
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 2
+    service:
+      type: LoadBalancer
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+  # Tracer viewer (with Jaeger UI included).
+  # Know more here: https://www.jaegertracing.io/docs/1.6/deployment/#query-service--ui
+  query:
+    enabled: true
+    agentSidecar:
+      enabled: false
+    replicaCount: 1
+    service:
+      type: LoadBalancer
+      port: 8080
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+         cpu: 256m
+         memory: 128Mi
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+  # Kind of a garbage collector.
+  esIndexCleaner:
+    enabled: true
+    extraEnv:
+    - name: ROLLOVER
+      value: 'true'
+    # Format: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax
+    schedule: "55 23 * * *"
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 256m
+        memory: 128Mi
+    numberOfDays: 2
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+    initHook:
+      annotations:
+        # Needs to wait for jaeger-stack-elasticsearch secret to be created.
+        "helm.sh/hook": post-install,post-upgrade
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
+
+  # Refreshes indexes. Know more in https://www.elastic.co/guide/en/elasticsearch/reference/current/index-rollover.html
+  esRollover:
+    enabled: true
+    extraEnv:
+    - name: CONDITIONS
+      value: '{"max_age": "1d"}'
+    # Format: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax
+    schedule: "10 0 * * *"
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 256m
+        memory: 128Mi
+    numberOfDays: 2
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+    initHook:
+      annotations:
+        # Needs to wait for jaeger-stack-elasticsearch secret to be created.
+        "helm.sh/hook": post-install,post-upgrade
+      podAnnotations:
+        sidecar.istio.io/inject: "false"
+
+
 kube-state-metrics:
   # Values:
+  # - https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics/5.8.1
   # - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
   fullnameOverride: kube-state-metrics
   replicas: 1
   service:
-    port: 8080
     type: ClusterIP
+    port: 8080
   podAnnotations:
     sidecar.istio.io/inject: "false"
 
 
-elastic:
+elastic-eck-stk:
   # Values:
-  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
+  # - https://artifacthub.io/packages/helm/elastic/eck-stack/0.6.0
+  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
   eck-elasticsearch:
+    # Values:
+    # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
     enable: true
-    fullnameOverride: elasticsearch
+    fullnameOverride: elasticsearch-eck-stk
     version: 8.9.0-SNAPSHOT
     annotations:
       # Remove only if you're using the Elastic Enterprise.
@@ -269,10 +754,10 @@ elastic:
           # Adjust to your storage class name.
           # storageClassName: local-storage
 
-  # Values:
-  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-kibana/values.yaml
   eck-kibana:
-    enable: true
+    # Values:
+    # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-kibana/values.yaml
+    enabled: true
     fullnameOverride: kibana
     version: 8.9.0-SNAPSHOT
     annotations:
@@ -281,12 +766,11 @@ elastic:
     spec:
       count: 1
       elasticsearchRef:
-        name: elasticsearch
+        name: elasticsearch-eck-stk
       http:
-        # Uncomment if you increase the number of replicas in count.
-        # service:
-        #   spec:
-        #     type: LoadBalancer
+        service:
+          spec:
+            type: LoadBalancer
         tls:
           selfSignedCertificate:
             disabled: true
@@ -300,8 +784,8 @@ elastic:
           containers:
           - name: kibana
             env:
-              - name: NODE_OPTIONS
-                value: "--max-old-space-size=2048"
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=2048"
             resources:
               limits:
                 memory: 1Gi
@@ -311,7 +795,7 @@ elastic:
                 cpu: 1
       config:
         # This depends on the namespace where ECK stack is being deployed. 
-        xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-es-http.observability.svc:9200"]
+        xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-eck-stk-es-http.observability.svc:9200"]
         xpack.fleet.agents.fleet_server.hosts: ["http://fleet-server-agent-http.observability.svc:8220"]
         # Uncomment if you going to use Istio Gateway.
         # server.basePath: "/observability/kibana"
@@ -351,9 +835,9 @@ elastic:
               name: kubernetes
             name: kubernetes-1
 
-  # Values:
-  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-agent/values.yaml
   eck-agent:
+    # Values:
+    # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-agent/values.yaml
     enabled: true
     version: 8.9.0-SNAPSHOT
     annotations:
@@ -381,9 +865,9 @@ elastic:
             securityContext:
               runAsUser: 0
 
-  # Values:
-  # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-fleet-server/values.yaml
   eck-fleet-server:
+    # Values:
+    # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-fleet-server/values.yaml
     enabled: true
     version: 8.9.0-SNAPSHOT
     annotations:
@@ -395,7 +879,7 @@ elastic:
       kibanaRef:
         name: kibana
       elasticsearchRefs:
-      - name: elasticsearch
+      - name: elasticsearch-eck-stk
       deployment:
         replicas: 1
         podTemplate:

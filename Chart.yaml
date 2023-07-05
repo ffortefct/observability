@@ -19,15 +19,27 @@ version: 1.0.0
 kubeVersion: ">=1.24.0-1.27.0"
 appVersion: "1.0.0"
 dependencies:
+  - name: eck-stack
+    version: 0.6.0
+    repository: https://helm.elastic.co
+    alias: elastic-jg-stk
+    tags:
+      - jaeger-components 
+  - name: jaeger
+    version: 0.71.7
+    repository: https://jaegertracing.github.io/helm-charts
+    alias: jaeger-stack
+    tags:
+      - jaeger-components
   - name: kube-state-metrics
     version: 5.8.1
     repository: https://prometheus-community.github.io/helm-charts
     tags:
-      - log-and-k8s-metrics 
+      - eck-components 
   - name: eck-stack
     version: 0.6.0
     repository: https://helm.elastic.co
-    alias: elastic
+    alias: elastic-eck-stk
     tags:
-      - log-and-k8s-metrics 
+      - eck-components 
 
