@@ -28,6 +28,7 @@ elastic-jg-stk:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
     enable: true
     fullnameOverride: elasticsearch-jg-stk
+    # Jaeger's Elasticsearch client doesn't support version 8.
     version: 7.17.11
     annotations:
       # Remove only if you're using the Elastic Enterprise.
@@ -282,8 +283,10 @@ jaeger-stack:
   # Values:
   # - https://artifacthub.io/packages/helm/jaegertracing/jaeger/0.71.7
   # - https://github.com/jaegertracing/helm-charts/blob/main/charts/jaeger/values.yaml
+  #
+  # Overall architecture with a brief explanation: https://www.jaegertracing.io/docs/1.46/architecture/
   provisionDataStore:
-    kafka: true # Used by the injester & indexer.
+    kafka: true
     cassandra: false
     elasticsearch: false
   fullnameOverride: jaeger-stack
@@ -305,6 +308,7 @@ jaeger-stack:
       topic: jaeger-tracing
       authentication: none
 
+  # Used as an offloader in cases which the throughput of traces is higher.
   kafka:
     # Values:
     # - https://artifacthub.io/packages/helm/bitnami/kafka/19.1.5
@@ -371,8 +375,9 @@ jaeger-stack:
         accessModes: ["ReadWriteOnce"]
         size: 1Gi
         dataLogDir:
-          size: 1Gi
+          size: 200Mi
 
+  # Injests traces from Kafka to the storage backend (i.e., Elasticsearch).
   injester:
     enabled: true
     replicaCount: 1
@@ -391,10 +396,11 @@ jaeger-stack:
       sidecar.istio.io/inject: "false"
 
   agent:
-    # OpenTelemetry Collectors
-    # are used as span injestors.
+    # OpenTelemetry Collectors are used as span injestors.
+    # Actually, this is deprecated...
     enabled: false
 
+  # Recieves traces and publishes them in Kafka.
   collector:
     enabled: true
     replicaCount: 1
@@ -458,6 +464,7 @@ jaeger-stack:
     initHook:
       annotations:
         # Needs to wait for jaeger-stack-elasticsearch secret to be created.
+        # It seems a bug since this isn't supposed to be set this way.
         "helm.sh/hook": post-install,post-upgrade
       podAnnotations:
         sidecar.istio.io/inject: "false"
@@ -486,6 +493,7 @@ jaeger-stack:
     initHook:
       annotations:
         # Needs to wait for jaeger-stack-elasticsearch secret to be created.
+        # It seems a bug since this isn't supposed to be set this way.
         "helm.sh/hook": post-install,post-upgrade
       podAnnotations:
         sidecar.istio.io/inject: "false"
