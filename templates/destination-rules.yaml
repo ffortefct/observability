@@ -3,10 +3,10 @@
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: kibana
-  namespace: observability
+  name: {{ .Values.istio.kibana.ruleName }} 
+  namespace: {{ .Values.istio.kibana.namespace }}
 spec:
-  host: kibana-kb-http.observability.svc.cluster.local
+  host: {{ .Values.istio.kibana.host }}
   subsets:
   - name: v1
     labels:

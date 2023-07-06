@@ -3,11 +3,17 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: kibana-rule
-  namespace: observability
+  name: {{ .Values.istio.kibana.virtualServiceName }}
+  namespace: {{ .Values.istio.kibana.namespace }}
 spec:
-  gateways: {{ .Values.istio.gateways | toYaml | nindent 2 }}
-  hosts: {{ .Values.istio.kibana.hosts | toYaml | nindent 2 }}
+  {{- with.Values.istio.gateways }}
+  gateways:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with.Values.istio.host }}
+  hosts:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
   http:
   - match:
     - uri:
@@ -16,9 +22,9 @@ spec:
       uri: /
     route:
     - destination:
-        host: kibana-kb-http.observability.svc.cluster.local
+        host: {{ .values.istio.kibana.host }}
         port:
-          number: 5601
+          number: {{ .values.istio.kibana.port }}
         subset: v1
 {{- end }}
 

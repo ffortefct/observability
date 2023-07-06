@@ -10,13 +10,18 @@ tags:
 # Set the gateways and hosts if you are going 
 # to run a service behind the Istio Gateway.
 istio:
-  gateways: []
+  gateways: [] # Define this.
   kibana:
     enabled: false
+    ruleName: kibana-rule
+    virtualServiceName: kibana-virtual-svc
+    namespace: observability
+    host: kibana-kb-http.observability.svc.cluster.local
+    port: 5601
     # It must to be the same as the path defined
     # in the server.basePath config field.
     path: "/observability/kibana"
-    hosts: []
+    hosts: [] # Define this.
 
 
 elastic-jg-stk:
@@ -526,17 +531,56 @@ jaeger-stack:
         sidecar.istio.io/inject: "false"
 
 
-otlp-sidecar-collector:
+otlpSidecarCollector:
   # Requires the OpenTelemetry Operator: https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator
+  #
+  # Pods are injected if they contain the annotation:
+  # sidecar.opentelemetry.io/inject: "<deployed-namespace>/<otlpSidecarCollector.name>"
   enabled: false
-  # TODO: fine-tune this.
+  name: otlp-sidecar-collector
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 256m
+      memory: 128Mi
+  config:
+    extensions:
+      memory_ballast: {}
+    processors:
+      batch: {}
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: localhost:4317
+          http:
+            endpoint: localhost:4318
+    exporters:
+      logging: {}
+      otlp:
+        endpoint: http://jaeger-stack-collector.observability.svc:4317
+        tls:
+          insecure: true
+    service:
+      extensions: [memory_ballast]
+      pipelines:
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp]
 
 
 otlp-collector:
   # Values:
   # - https://artifacthub.io/packages/helm/opentelemetry-helm/opentelemetry-collector/0.62.0
   # - https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
-  enabled: true
+  enabled: false
   fullnameOverride: "otlp-independent-collector"
   mode: daemonset
   config:
@@ -602,8 +646,11 @@ otlp-collector:
       enabled: false
   resources:
     limits:
-      cpu: 256m
+      cpu: 500m
       memory: 512Mi
+    requests:
+      cpu: 256m
+      memory: 128Mi
   podAnnotations:
     sidecar.istio.io/inject: "false"
   livenessProbe:

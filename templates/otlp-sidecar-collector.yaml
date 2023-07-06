@@ -1,0 +1,18 @@
+---
+{{- if .Values.otlpSidecarCollector.enabled }}
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: {{ .Values.otlpSidecarCollector.name }}
+spec:
+  mode: sidecar
+  {{- with .Values.otlpSidecarCollector.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.otlpSidecarCollector.config }}
+  config: |
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+
