@@ -27,6 +27,8 @@ istio:
     path: "/observability/kibana"
   grafana:
     # Uncomment the field grafana.grafana.ini.server if you set to true.
+    #
+    # Set istio.destinationHost value in grafana.grafana.ini.server.domain
     enabled: false
     ruleName: grafana-rule
     virtualServiceName: grafana-virtual-svc
@@ -751,7 +753,8 @@ grafana:
   grafana.ini:
     # Uncomment if you going to use Istio Gateway.
     # server:
-    #   domain: <insert>
+    #   # Insert the same domain as istio.destinationHost
+    #   domain: ""
     #   root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
     #   serve_from_sub_path: true
   podAnnotations:
