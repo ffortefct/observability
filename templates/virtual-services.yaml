@@ -1,18 +1,53 @@
 ---
-{{- if .Values.istio.kibana.enabled }}
+{{- if and
+  (index .Values "global" "tags" "jaeger-components")
+  .Values.grafana.enabled
+  .Values.istio.grafana.enabled
+}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Values.istio.grafana.virtualServiceName }}
+spec:
+  gateways:
+  - {{ .Values.istio.gateway }}
+  {{- with .Values.istio.destinationHost }}
+  hosts:
+  {{- if . }}
+  - {{ . }}  
+  {{- end }}
+  {{- end }}
+  http:
+  - match:
+    - uri:
+        prefix: {{ .Values.istio.grafana.path }}
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: {{ .Values.istio.grafana.host }}
+        port:
+          number: {{ .Values.istio.grafana.port }}
+        subset: v1
+{{- end }}
+---
+{{- if and
+  (index .Values "global" "tags" "eck-components")
+  (index .Values "elastic-eck-stk" "eck-kibana-enabled")
+  .Values.istio.kibana.enabled
+}}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: {{ .Values.istio.kibana.virtualServiceName }}
-  namespace: {{ .Values.istio.kibana.namespace }}
 spec:
-  {{- with.Values.istio.gateways }}
   gateways:
-    {{ toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with.Values.istio.host }}
+  - {{ .Values.istio.gateway }}
+  {{- with .Values.istio.destinationHost }}
   hosts:
-    {{ toYaml . | nindent 4 }}
+  {{- if . }}
+  - {{ . }}  
+  {{- end }}
   {{- end }}
   http:
   - match:
@@ -22,9 +57,9 @@ spec:
       uri: /
     route:
     - destination:
-        host: {{ .values.istio.kibana.host }}
+        host: {{ .Values.istio.kibana.host }}
         port:
-          number: {{ .values.istio.kibana.port }}
+          number: {{ .Values.istio.kibana.port }}
         subset: v1
 {{- end }}
 

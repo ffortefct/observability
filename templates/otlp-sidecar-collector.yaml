@@ -1,5 +1,8 @@
 ---
-{{- if .Values.otlpSidecarCollector.enabled }}
+{{- if and 
+  (index .Values "global" "tags" "jaeger-components")
+  .Values.otlpSidecarCollector.enabled
+}}
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:

@@ -1,0 +1,15 @@
+---
+{{- if
+  (index .Values "global" "tags" "jaeger-components")
+  .Values.grafana.enabled
+}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-user
+type: Opaque
+data:
+  username: {{ .Values.grafana.username }}
+  password: {{ .Values.grafana.password }}
+{{- end }}
+

@@ -8,11 +8,14 @@ dependencies:
 - name: opentelemetry-collector
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   version: 0.62.0
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 6.57.4
 - name: kube-state-metrics
   repository: https://prometheus-community.github.io/helm-charts
   version: 5.8.1
 - name: eck-stack
   repository: https://helm.elastic.co
   version: 0.6.0
-digest: sha256:44dda08e73b0b339faf6fc6d720494d2f16073d386dfb2a326f5ffe33aa5aed0
-generated: "2023-07-06T15:07:46.537870493+01:00"
+digest: sha256:bd1ea330f99d5c151d2719619b88d9818ab485fbac70f1328dd18746ba681699
+generated: "2023-07-06T22:32:19.985581456+01:00"

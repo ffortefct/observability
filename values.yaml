@@ -1,27 +1,40 @@
 # Modular way to activate/deactivate sectors.
-tags:
-  # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and rollout CronJobs with
-  # Elasticsearch as datastore), OpenTelemetry Independent Collectors (see otlp-collectors section) and Grafana.
-  jaeger-components: false
-  # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
-  eck-components: false
+global:
+  tags:
+    # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and rollout CronJobs with
+    # Elasticsearch as datastore), OpenTelemetry Independent Collectors (see otlp-independent-collector section),
+    # OpenTelemetry Sidecar Collectors (see otlpSidecarCollector section) and Grafana.
+    jaeger-components: false
+    # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
+    eck-components: false
 
 
-# Set the gateways and hosts if you are going 
-# to run a service behind the Istio Gateway.
 istio:
-  gateways: [] # Define this.
+  # Define gateway and/or destinationHost
+  # or ignore if you pretend not to use.
+  gateway: ""
+  # Host passed to hosts field: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
+  destinationHost: ""
   kibana:
+    # Uncomment the field elastic-eck-stk.eck-kibana.config.server if you set to true.
     enabled: false
     ruleName: kibana-rule
     virtualServiceName: kibana-virtual-svc
-    namespace: observability
     host: kibana-kb-http.observability.svc.cluster.local
     port: 5601
     # It must to be the same as the path defined
     # in the server.basePath config field.
     path: "/observability/kibana"
-    hosts: [] # Define this.
+  grafana:
+    # Uncomment the field grafana.grafana.ini.server if you set to true.
+    enabled: false
+    ruleName: grafana-rule
+    virtualServiceName: grafana-virtual-svc
+    host: grafana.observability.svc.cluster.local
+    port: 8080
+    # It must to be the same as the path defined
+    # in the server.root_url init config field.
+    path: "/observability/grafana"
 
 
 elastic-jg-stk:
@@ -33,7 +46,7 @@ elastic-jg-stk:
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
-    enable: true
+    enabled: true
     fullnameOverride: elasticsearch-jg-stk
     # Jaeger's Elasticsearch client doesn't support version 8.
     version: 7.17.11
@@ -590,7 +603,7 @@ otlpSidecarCollector:
           exporters: [otlp]
 
 
-otlp-collector:
+otlp-independent-collector:
   # Values:
   # - https://artifacthub.io/packages/helm/opentelemetry-helm/opentelemetry-collector/0.62.0
   # - https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
@@ -659,6 +672,8 @@ otlp-collector:
       enabled: false
     zipkin:
       enabled: false
+    metrics:
+      enabled: false
   resources:
     limits:
       cpu: 500m
@@ -687,6 +702,67 @@ otlp-collector:
     type: ClusterIP
 
 
+grafana:
+  # Values:
+  # - https://artifacthub.io/packages/helm/grafana/grafana/6.57.4
+  # - https://github.com/grafana/helm-charts/tree/main/charts/grafana
+  enabled: true
+  fullnameOverride: grafana
+  username: grafana
+  password: changeme
+  replicas: 1 
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 10
+    successThreshold: 1
+  readinessProbe:
+    initialDelaySeconds: 80
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 10
+    successThreshold: 1
+  image:
+    repository: docker.io/grafana/grafana
+    tag: v8.2.6
+  service:
+    enabled: true
+    type: LoadBalancer
+    port: 8080
+  persistence:
+    enabled: true
+    type: pvc
+    size: 1Gi
+    # Adjust to your storage class name.
+    # storageClassName: local-storage
+    accessModes: ["ReadWriteOnce"]
+  datasources:
+    datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Jaeger
+      type: jaeger
+      url: http://jaeger-stack-query.observability.svc:8080
+      isDefault: false
+      access: proxy
+      editable: true
+  grafana.ini:
+    # Uncomment if you going to use Istio Gateway.
+    # server:
+    #   domain: <insert>
+    #   root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
+    #   serve_from_sub_path: true
+  podAnnotations:
+    sidecar.istio.io/inject: "true"
+  podLabels:
+    version: v1
+  admin:
+    existingSecret: grafana-user
+    userKey: username
+    passwordKey: password
+
+
 kube-state-metrics:
   # Values:
   # - https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics/5.8.1
@@ -713,7 +789,7 @@ elastic-eck-stk:
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
-    enable: true
+    enabled: true
     fullnameOverride: elasticsearch-eck-stk
     version: 8.9.0-SNAPSHOT
     annotations:

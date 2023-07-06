@@ -2,52 +2,58 @@ apiVersion: v2
 name: observability
 description: Observability Architecture
 keywords:
-  - architecture
-  - observability
-  - elasticsearch
-  - jaeger
-  - opentelemetry
-  - kibana
-  - grafana
+- architecture
+- observability
+- elasticsearch
+- jaeger
+- opentelemetry
+- kibana
+- grafana
 home: https://github.com/ffortefct/observability
 sources:
-  - https://github.com/ffortefct/observability
+- https://github.com/ffortefct/observability
 maintainers:
-  - name: ffortefct
-    email: f.forte@campus.fct.unl.pt
+- name: ffortefct
+  email: f.forte@campus.fct.unl.pt
 type: application
 version: 1.0.0
 kubeVersion: ">=1.24.0-1.27.0"
 appVersion: "1.0.0"
 dependencies:
-  - name: eck-stack
-    version: 0.6.0
-    repository: https://helm.elastic.co
-    alias: elastic-jg-stk
-    tags:
-      - jaeger-components 
-  - name: jaeger
-    version: 0.71.7
-    repository: https://jaegertracing.github.io/helm-charts
-    alias: jaeger-stack
-    tags:
-      - jaeger-components
-  - name: opentelemetry-collector
-    version: 0.62.0
-    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-    alias: otlp-collector
-    condition: otlp-collector.enabled
-    tags:
-      - jaeger-components
-  - name: kube-state-metrics
-    version: 5.8.1
-    repository: https://prometheus-community.github.io/helm-charts
-    tags:
-      - eck-components 
-  - name: eck-stack
-    version: 0.6.0
-    repository: https://helm.elastic.co
-    alias: elastic-eck-stk
-    tags:
-      - eck-components 
+- name: eck-stack
+  version: 0.6.0
+  repository: https://helm.elastic.co
+  alias: elastic-jg-stk
+  tags:
+  - global.tags.jaeger-components 
+- name: jaeger
+  version: 0.71.7
+  repository: https://jaegertracing.github.io/helm-charts
+  alias: jaeger-stack
+  tags:
+  - global.tags.jaeger-components
+- name: opentelemetry-collector
+  version: 0.62.0
+  repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+  alias: otlp-independent-collector
+  condition: otlp-collector.enabled
+  tags:
+  - global.tags.jaeger-components
+- name: grafana
+  version: 6.57.4
+  repository: https://grafana.github.io/helm-charts
+  condition: grafana.enabled
+  tags:
+  - global.tags.jaeger-components
+- name: kube-state-metrics
+  version: 5.8.1
+  repository: https://prometheus-community.github.io/helm-charts
+  tags:
+  - global.tags.eck-components 
+- name: eck-stack
+  version: 0.6.0
+  repository: https://helm.elastic.co
+  alias: elastic-eck-stk
+  tags:
+  - global.tags.eck-components 
 

@@ -1,10 +1,29 @@
+{{- if and
+  (index .Values "global" "tags" "jaeger-components")
+  .Values.grafana.enabled
+  .Values.istio.grafana.enabled
+}}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ .Values.istio.grafana.ruleName }} 
+spec:
+  host: {{ .Values.istio.grafana.host }}
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+{{- end }}
 ---
-{{- if .Values.istio.kibana.enabled }}
+{{- if and
+  (index .Values "global" "tags" "eck-components")
+  (index .Values "elastic-eck-stk" "eck-kibana-enabled")
+  .Values.istio.kibana.enabled
+}}
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: {{ .Values.istio.kibana.ruleName }} 
-  namespace: {{ .Values.istio.kibana.namespace }}
 spec:
   host: {{ .Values.istio.kibana.host }}
   subsets:
