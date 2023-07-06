@@ -5,8 +5,6 @@ tags:
   jaeger-components: false
   # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
   eck-components: false
-  # OpenTelemetry Independent Collectors (the ones configured in the otlp-collectors section).
-  independent-otlp-collector: false
 
 
 # Set the gateways and hosts if you are going 
@@ -301,7 +299,6 @@ jaeger-stack:
       port: 9200
       user: elastic
       usePassword: true
-      # password: elastic
       existingSecret: elasticsearch-jg-stk-es-elastic-user
       existingSecretKey: elastic
       tls:
@@ -318,6 +315,10 @@ jaeger-stack:
     # - https://artifacthub.io/packages/helm/bitnami/kafka/19.1.5
     # - https://github.com/bitnami/charts/tree/main/bitnami/kafka
     fullnameOverride: kafka-tracing
+    image:
+      registry: docker.io
+      repository: bitnami/kafka
+      tag: 3.3.1-debian-11-r19
     replicaCount: 1
     livenessProbe:
       enabled: true
@@ -356,6 +357,10 @@ jaeger-stack:
       # - https://artifacthub.io/packages/helm/bitnami/zookeeper/10.2.5
       # - https://github.com/bitnami/charts/tree/main/bitnami/zookeeper
       enabled: true
+      image:
+        registry: docker.io
+        repository: bitnami/zookeeper
+        tag: 3.8.0-debian-11-r56
       fullnameOverride: zookeeper-kafka-tracing
       replicaCount: 1
       livenessProbe:
@@ -391,6 +396,9 @@ jaeger-stack:
       enabled: false
       minReplicas: 1
       maxReplicas: 2
+      behavior:
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
     resources:
       limits:
         cpu: 1
@@ -409,6 +417,8 @@ jaeger-stack:
   # Recieves traces and publishes them in Kafka.
   collector:
     enabled: true
+    image: jaegertracing/jaeger-collector
+    tag: 1.45.0
     replicaCount: 1
     autoscaling:
       enabled: false
@@ -416,6 +426,13 @@ jaeger-stack:
       maxReplicas: 2
     service:
       type: LoadBalancer
+      otlp:
+        grpc:
+          name: otlp-grpc
+          port: 4317
+        http:
+          name: otlp-http
+          port: 4318
     resources:
       limits:
         cpu: 1
@@ -430,6 +447,8 @@ jaeger-stack:
   # Know more here: https://www.jaegertracing.io/docs/1.6/deployment/#query-service--ui
   query:
     enabled: true
+    image: jaegertracing/jaeger-query
+    tag: 1.45.0
     agentSidecar:
       enabled: false
     replicaCount: 1
@@ -478,6 +497,8 @@ jaeger-stack:
   # Refreshes indexes. Know more in https://www.elastic.co/guide/en/elasticsearch/reference/current/index-rollover.html
   esRollover:
     enabled: true
+    image: jaegertracing/jaeger-es-rollover
+    tag: latest
     extraEnv:
     - name: CONDITIONS
       value: '{"max_age": "1d"}'
@@ -515,10 +536,70 @@ otlp-collector:
   # Values:
   # - https://artifacthub.io/packages/helm/opentelemetry-helm/opentelemetry-collector/0.62.0
   # - https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
+  enabled: true
   fullnameOverride: "otlp-independent-collector"
   mode: daemonset
-  config: {} # TODO: fine-tune this.
-  ports:  {} # TODO: fine-tune this.
+  config:
+    extensions:
+      health_check: {} # Necessary for liveness and readiness probes.
+      memory_ballast: {}
+    processors:
+      batch: {}
+      memory_limiter: null # Managed by resources field.
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+      jaeger: null
+      prometheus: null
+      zipkin: null
+    exporters:
+      logging: {}
+      otlp:
+        endpoint: http://jaeger-stack-collector.observability.svc:4317
+        tls:
+          insecure: true
+    service:
+      extensions: [health_check, memory_ballast]
+      pipelines:
+        metrics: null
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp]
+      telemetry: null
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: 0.81.0
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      hostPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      hostPort: 4318
+      protocol: TCP
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
   resources:
     limits:
       cpu: 256m
@@ -526,13 +607,13 @@ otlp-collector:
   podAnnotations:
     sidecar.istio.io/inject: "false"
   livenessProbe:
-    initialDelaySeconds: 40
+    initialDelaySeconds: 100 # To compensate Jaeger storage backend (it takes some time).
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
     terminationGracePeriodSeconds: 10
   readinessProbe:
-    initialDelaySeconds: 40
+    initialDelaySeconds: 100 # To compensate Jaeger storage backend (it takes some time).
     periodSeconds: 10
     timeoutSeconds: 5
     successThreshold: 1
@@ -549,6 +630,10 @@ kube-state-metrics:
   # - https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics/5.8.1
   # - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
   fullnameOverride: kube-state-metrics
+  image:
+    registry: registry.k8s.io
+    repository: kube-state-metrics/kube-state-metrics
+    tag: v2.9.2
   replicas: 1
   service:
     type: ClusterIP
