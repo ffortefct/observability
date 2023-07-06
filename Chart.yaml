@@ -24,36 +24,24 @@ dependencies:
   version: 0.6.0
   repository: https://helm.elastic.co
   alias: elastic-jg-stk
-  tags:
-  - global.tags.jaeger-components 
 - name: jaeger
   version: 0.71.7
   repository: https://jaegertracing.github.io/helm-charts
   alias: jaeger-stack
-  tags:
-  - global.tags.jaeger-components
 - name: opentelemetry-collector
   version: 0.62.0
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   alias: otlp-independent-collector
   condition: otlp-collector.enabled
-  tags:
-  - global.tags.jaeger-components
 - name: grafana
   version: 6.57.4
   repository: https://grafana.github.io/helm-charts
-  condition: grafana.enabled
-  tags:
-  - global.tags.jaeger-components
 - name: kube-state-metrics
   version: 5.8.1
   repository: https://prometheus-community.github.io/helm-charts
-  tags:
-  - global.tags.eck-components 
 - name: eck-stack
   version: 0.6.0
   repository: https://helm.elastic.co
+  condition: elastic-eck-stk.enabled
   alias: elastic-eck-stk
-  tags:
-  - global.tags.eck-components 
 

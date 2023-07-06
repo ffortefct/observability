@@ -1,6 +1,5 @@
 ---
 {{- if and
-  (index .Values "global" "tags" "jaeger-components")
   .Values.grafana.enabled
   .Values.istio.grafana.enabled
 }}
@@ -17,8 +16,8 @@ spec:
 {{- end }}
 ---
 {{- if and
-  (index .Values "global" "tags" "eck-components")
-  (index .Values "elastic-eck-stk" "eck-kibana-enabled")
+  (index .Values "elastic-eck-stk" "enabled")
+  (index .Values "elastic-eck-stk" "eck-kibana" "enabled")
   .Values.istio.kibana.enabled
 }}
 apiVersion: networking.istio.io/v1beta1

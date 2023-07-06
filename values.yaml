@@ -1,14 +1,3 @@
-# Modular way to activate/deactivate sectors.
-global:
-  tags:
-    # Jaeger stack (i.e., Injester & indexer with Kafka, Collector, Query, index cleaner and rollout CronJobs with
-    # Elasticsearch as datastore), OpenTelemetry Independent Collectors (see otlp-independent-collector section),
-    # OpenTelemetry Sidecar Collectors (see otlpSidecarCollector section) and Grafana.
-    jaeger-components: false
-    # Elasticsearch, Fleet Server, Elastic Agents, Kube State Metrics and Kibana.
-    eck-components: false
-
-
 istio:
   # Define gateway and/or destinationHost
   # or ignore if you pretend not to use.
@@ -62,235 +51,235 @@ elastic-jg-stk:
       tls:
         selfSignedCertificate:
           disabled: true
-    nodeSets:
-    - name: masters
-      count: 1
-      config:
-        node.roles: ["master"]
-        # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-        node.store.allow_mmap: false
-      podTemplate:
-        metadata:
-          annotations:
-            sidecar.istio.io/inject: "false"
-        spec:
-          containers:
-          - name: elasticsearch
-            readinessProbe:
-              exec:
-                command:
-                - bash
-                - -c
-                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
-              failureThreshold: 3
-              initialDelaySeconds: 100
-              periodSeconds: 12
-              successThreshold: 1
-              timeoutSeconds: 20
-            env:
-            - name: READINESS_PROBE_TIMEOUT
-              value: "10"
-            resources:
-              limits:
-                cpu: 1
-                memory: 2Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-          # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-          # initContainers:
-          # - command:
-          #   - sh
-          #   - "-c"
-          #   - sysctl -w vm.max_map_count=262144
-          #   name: sysctl
-          #   securityContext:
-          #     privileged: true
-          #     runAsUser: 0   
-      volumeClaimTemplates:
-      - metadata:
-          name: elasticsearch-data
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
-          # Adjust to your storage class name.
-          # storageClassName: local-storage
-    - name: hot
-      count: 1
-      config:
-        node.roles: ["data_hot", "data_content", "ingest"]
-        # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-        node.store.allow_mmap: false
-      podTemplate:
-        metadata:
-          annotations:
-            sidecar.istio.io/inject: "false"
-        spec:
-          containers:
-          - name: elasticsearch
-            readinessProbe:
-              exec:
-                command:
-                - bash
-                - -c
-                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
-              failureThreshold: 3
-              initialDelaySeconds: 100
-              periodSeconds: 12
-              successThreshold: 1
-              timeoutSeconds: 20
-            env:
-            - name: READINESS_PROBE_TIMEOUT
-              value: "10"
-            resources:
-              limits:
-                cpu: 1
-                memory: 2Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-          # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-          # initContainers:
-          # - command:
-          #   - sh
-          #   - "-c"
-          #   - sysctl -w vm.max_map_count=262144
-          #   name: sysctl
-          #   securityContext:
-          #     privileged: true
-          #     runAsUser: 0   
-      volumeClaimTemplates:
-      - metadata:
-          name: elasticsearch-data
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
-          # Adjust to your storage class name.
-          # storageClassName: local-storage
-    - name: warm
-      count: 1
-      config:
-        node.roles: ["data_warm"]
-        # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-        node.store.allow_mmap: false
-      podTemplate:
-        metadata:
-          annotations:
-            sidecar.istio.io/inject: "false"
-        spec:
-          containers:
-          - name: elasticsearch
-            readinessProbe:
-              exec:
-                command:
-                - bash
-                - -c
-                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
-              failureThreshold: 3
-              initialDelaySeconds: 100
-              periodSeconds: 12
-              successThreshold: 1
-              timeoutSeconds: 20
-            env:
-            - name: READINESS_PROBE_TIMEOUT
-              value: "10"
-            resources:
-              limits:
-                cpu: 1
-                memory: 2Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-          # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-          # initContainers:
-          # - command:
-          #   - sh
-          #   - "-c"
-          #   - sysctl -w vm.max_map_count=262144
-          #   name: sysctl
-          #   securityContext:
-          #     privileged: true
-          #     runAsUser: 0   
-      volumeClaimTemplates:
-      - metadata:
-          name: elasticsearch-data
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
-          # Adjust to your storage class name.
-          # storageClassName: local-storage
-    - name: cold
-      count: 1
-      config:
-        node.roles: ["data_cold"]
-        # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-        node.store.allow_mmap: false
-      podTemplate:
-        metadata:
-          annotations:
-            sidecar.istio.io/inject: "false"
-        spec:
-          containers:
-          - name: elasticsearch
-            readinessProbe:
-              exec:
-                command:
-                - bash
-                - -c
-                - /mnt/elastic-internal/scripts/readiness-probe-script.sh
-              failureThreshold: 3
-              initialDelaySeconds: 100
-              periodSeconds: 12
-              successThreshold: 1
-              timeoutSeconds: 20
-            env:
-            - name: READINESS_PROBE_TIMEOUT
-              value: "10"
-            resources:
-              limits:
-                cpu: 1
-                memory: 2Gi
-              requests:
-                cpu: 1
-                memory: 2Gi
-          # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
-          # initContainers:
-          # - command:
-          #   - sh
-          #   - "-c"
-          #   - sysctl -w vm.max_map_count=262144
-          #   name: sysctl
-          #   securityContext:
-          #     privileged: true
-          #     runAsUser: 0   
-      volumeClaimTemplates:
-      - metadata:
-          name: elasticsearch-data
-        spec:
-          accessModes:
-          - ReadWriteOnce
-          resources:
-            requests:
-              storage: 1Gi
-          # Adjust to your storage class name.
-          # storageClassName: local-storage
+    # nodeSets:
+    # - name: masters
+    #   count: 1
+    #   config:
+    #     node.roles: ["master"]
+    #     # Remove/comment in a production environment (it's true by default).
+    #     # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #     node.store.allow_mmap: false
+    #   podTemplate:
+    #     metadata:
+    #       annotations:
+    #         sidecar.istio.io/inject: "false"
+    #     spec:
+    #       containers:
+    #       - name: elasticsearch
+    #         readinessProbe:
+    #           exec:
+    #             command:
+    #             - bash
+    #             - -c
+    #             - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+    #           failureThreshold: 3
+    #           initialDelaySeconds: 100
+    #           periodSeconds: 12
+    #           successThreshold: 1
+    #           timeoutSeconds: 20
+    #         env:
+    #         - name: READINESS_PROBE_TIMEOUT
+    #           value: "10"
+    #         resources:
+    #           limits:
+    #             cpu: 1
+    #             memory: 2Gi
+    #           requests:
+    #             cpu: 1
+    #             memory: 2Gi
+    #       # Uncomment in a prodution environment.
+    #       # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #       # initContainers:
+    #       # - command:
+    #       #   - sh
+    #       #   - "-c"
+    #       #   - sysctl -w vm.max_map_count=262144
+    #       #   name: sysctl
+    #       #   securityContext:
+    #       #     privileged: true
+    #       #     runAsUser: 0   
+    #   volumeClaimTemplates:
+    #   - metadata:
+    #       name: elasticsearch-data
+    #     spec:
+    #       accessModes:
+    #       - ReadWriteOnce
+    #       resources:
+    #         requests:
+    #           storage: 1Gi
+    #       # Adjust to your storage class name.
+    #       # storageClassName: local-storage
+    # - name: hot
+    #   count: 1
+    #   config:
+    #     node.roles: ["data_hot", "data_content", "ingest"]
+    #     # Remove/comment in a production environment (it's true by default).
+    #     # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #     node.store.allow_mmap: false
+    #   podTemplate:
+    #     metadata:
+    #       annotations:
+    #         sidecar.istio.io/inject: "false"
+    #     spec:
+    #       containers:
+    #       - name: elasticsearch
+    #         readinessProbe:
+    #           exec:
+    #             command:
+    #             - bash
+    #             - -c
+    #             - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+    #           failureThreshold: 3
+    #           initialDelaySeconds: 100
+    #           periodSeconds: 12
+    #           successThreshold: 1
+    #           timeoutSeconds: 20
+    #         env:
+    #         - name: READINESS_PROBE_TIMEOUT
+    #           value: "10"
+    #         resources:
+    #           limits:
+    #             cpu: 1
+    #             memory: 2Gi
+    #           requests:
+    #             cpu: 1
+    #             memory: 2Gi
+    #       # Uncomment in a prodution environment.
+    #       # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #       # initContainers:
+    #       # - command:
+    #       #   - sh
+    #       #   - "-c"
+    #       #   - sysctl -w vm.max_map_count=262144
+    #       #   name: sysctl
+    #       #   securityContext:
+    #       #     privileged: true
+    #       #     runAsUser: 0   
+    #   volumeClaimTemplates:
+    #   - metadata:
+    #       name: elasticsearch-data
+    #     spec:
+    #       accessModes:
+    #       - ReadWriteOnce
+    #       resources:
+    #         requests:
+    #           storage: 1Gi
+    #       # Adjust to your storage class name.
+    #       # storageClassName: local-storage
+    # - name: warm
+    #   count: 1
+    #   config:
+    #     node.roles: ["data_warm"]
+    #     # Remove/comment in a production environment (it's true by default).
+    #     # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #     node.store.allow_mmap: false
+    #   podTemplate:
+    #     metadata:
+    #       annotations:
+    #         sidecar.istio.io/inject: "false"
+    #     spec:
+    #       containers:
+    #       - name: elasticsearch
+    #         readinessProbe:
+    #           exec:
+    #             command:
+    #             - bash
+    #             - -c
+    #             - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+    #           failureThreshold: 3
+    #           initialDelaySeconds: 100
+    #           periodSeconds: 12
+    #           successThreshold: 1
+    #           timeoutSeconds: 20
+    #         env:
+    #         - name: READINESS_PROBE_TIMEOUT
+    #           value: "10"
+    #         resources:
+    #           limits:
+    #             cpu: 1
+    #             memory: 2Gi
+    #           requests:
+    #             cpu: 1
+    #             memory: 2Gi
+    #       # Uncomment in a prodution environment.
+    #       # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #       # initContainers:
+    #       # - command:
+    #       #   - sh
+    #       #   - "-c"
+    #       #   - sysctl -w vm.max_map_count=262144
+    #       #   name: sysctl
+    #       #   securityContext:
+    #       #     privileged: true
+    #       #     runAsUser: 0   
+    #   volumeClaimTemplates:
+    #   - metadata:
+    #       name: elasticsearch-data
+    #     spec:
+    #       accessModes:
+    #       - ReadWriteOnce
+    #       resources:
+    #         requests:
+    #           storage: 1Gi
+    #       # Adjust to your storage class name.
+    #       # storageClassName: local-storage
+    # - name: cold
+    #   count: 1
+    #   config:
+    #     node.roles: ["data_cold"]
+    #     # Remove/comment in a production environment (it's true by default).
+    #     # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #     node.store.allow_mmap: false
+    #   podTemplate:
+    #     metadata:
+    #       annotations:
+    #         sidecar.istio.io/inject: "false"
+    #     spec:
+    #       containers:
+    #       - name: elasticsearch
+    #         readinessProbe:
+    #           exec:
+    #             command:
+    #             - bash
+    #             - -c
+    #             - /mnt/elastic-internal/scripts/readiness-probe-script.sh
+    #           failureThreshold: 3
+    #           initialDelaySeconds: 100
+    #           periodSeconds: 12
+    #           successThreshold: 1
+    #           timeoutSeconds: 20
+    #         env:
+    #         - name: READINESS_PROBE_TIMEOUT
+    #           value: "10"
+    #         resources:
+    #           limits:
+    #             cpu: 1
+    #             memory: 2Gi
+    #           requests:
+    #             cpu: 1
+    #             memory: 2Gi
+    #       # Uncomment in a prodution environment.
+    #       # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+    #       # initContainers:
+    #       # - command:
+    #       #   - sh
+    #       #   - "-c"
+    #       #   - sysctl -w vm.max_map_count=262144
+    #       #   name: sysctl
+    #       #   securityContext:
+    #       #     privileged: true
+    #       #     runAsUser: 0   
+    #   volumeClaimTemplates:
+    #   - metadata:
+    #       name: elasticsearch-data
+    #     spec:
+    #       accessModes:
+    #       - ReadWriteOnce
+    #       resources:
+    #         requests:
+    #           storage: 1Gi
+    #       # Adjust to your storage class name.
+    #       # storageClassName: local-storage
 
   # Unused components.
   eck-kibana:
@@ -710,7 +699,8 @@ grafana:
   # - https://github.com/grafana/helm-charts/tree/main/charts/grafana
   enabled: true
   fullnameOverride: grafana
-  # username and password will be encoded in grafana-user's secret.
+  # username and password will be encoded
+  # automatically in grafana-user's secret.
   username: grafana
   password: changeme
   replicas: 1 
@@ -750,19 +740,19 @@ grafana:
       isDefault: false
       access: proxy
       editable: true
-  grafana.ini:
-    # Uncomment if you going to use Istio Gateway.
-    # server:
-    #   # Insert the same domain as istio.destinationHost
-    #   domain: ""
-    #   root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
-    #   serve_from_sub_path: true
+  # Uncomment if you going to use Istio Gateway.
+  # grafana.ini:
+  #   server:
+  #     # Insert the same domain as istio.destinationHost
+  #     domain: ""
+  #     root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
+  #     serve_from_sub_path: true
   podAnnotations:
     sidecar.istio.io/inject: "true"
   podLabels:
     version: v1
   admin:
-    # Don't change this.
+    # Created automatically.
     existingSecret: grafana-user
     userKey: username
     passwordKey: password
@@ -791,6 +781,7 @@ elastic-eck-stk:
   # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
   #
   # Requires the ECK Operator: https://github.com/elastic/cloud-on-k8s/tree/main/deploy
+  enabled: true
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
