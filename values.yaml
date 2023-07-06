@@ -538,7 +538,20 @@ otlpSidecarCollector:
   # sidecar.opentelemetry.io/inject: "<deployed-namespace>/<otlpSidecarCollector.name>"
   enabled: false
   name: otlp-sidecar-collector
+  image: otel/opentelemetry-collector-contrib
+  tag: 0.81.0
+  ports:
+    # Specification: https://github.com/open-telemetry/opentelemetry-operator/blob/main/docs/api.md#opentelemetrycollectorspecportsindex
+  - name: otlp
+    port: 4317
+    protocol: TCP
+    appProtocol: grpc
+  - name: otlp-http
+    port: 4318
+    protocol: TCP
   resources:
+    # Specification: https://github.com/open-telemetry/opentelemetry-operator/blob/main/docs/api.md#opentelemetrycollectorspecresources
+    # Note: this doesn't use the field claims.
     limits:
       cpu: 500m
       memory: 512Mi
@@ -546,6 +559,7 @@ otlpSidecarCollector:
       cpu: 256m
       memory: 128Mi
   config:
+    # Config file specification: https://opentelemetry.io/docs/collector/configuration/
     extensions:
       memory_ballast: {}
     processors:
@@ -584,6 +598,7 @@ otlp-collector:
   fullnameOverride: "otlp-independent-collector"
   mode: daemonset
   config:
+    # Config explanation: https://opentelemetry.io/docs/collector/configuration/
     extensions:
       health_check: {} # Necessary for liveness and readiness probes.
       memory_ballast: {}

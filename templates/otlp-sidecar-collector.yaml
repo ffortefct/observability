@@ -6,9 +6,15 @@ metadata:
   name: {{ .Values.otlpSidecarCollector.name }}
 spec:
   mode: sidecar
-  {{- with .Values.otlpSidecarCollector.resources }}
+  image: {{ .Values.otlpSidecarCollector.image }}:{{ .Values.otlpSidecarCollector.tag }}
+  {{- with .Values.otlpSidecarCollector.ports }}
+  ports:
+    {{- toYaml .| nindent 4 }}
+  {{- end }}
   resources:
-    {{- toYaml . | nindent 4 }}
+  {{- with .Values.otlpSidecarCollector.resources }}
+    {{- toYaml .limits | nindent 4 }}
+    {{- toYaml .requests | nindent 4 }}
   {{- end }}
   {{- with .Values.otlpSidecarCollector.config }}
   config: |
