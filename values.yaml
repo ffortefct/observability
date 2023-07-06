@@ -708,6 +708,7 @@ grafana:
   # - https://github.com/grafana/helm-charts/tree/main/charts/grafana
   enabled: true
   fullnameOverride: grafana
+  # username and password will be encoded in grafana-user's secret.
   username: grafana
   password: changeme
   replicas: 1 
@@ -758,6 +759,7 @@ grafana:
   podLabels:
     version: v1
   admin:
+    # Don't change this.
     existingSecret: grafana-user
     userKey: username
     passwordKey: password
