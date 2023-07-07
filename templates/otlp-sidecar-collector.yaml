@@ -4,15 +4,16 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: {{ .Values.otlpSidecarCollector.name }}
+  namespace: {{ include "observability.namespace" . }}
 spec:
   mode: sidecar
   image: {{ .Values.otlpSidecarCollector.image }}:{{ .Values.otlpSidecarCollector.tag }}
   {{- with .Values.otlpSidecarCollector.ports }}
   ports:
-    {{- toYaml .| nindent 4 }}
+    {{- toYaml .| nindent 2 }}
   {{- end }}
-  resources:
   {{- with .Values.otlpSidecarCollector.resources }}
+  resources:
     {{- toYaml .limits | nindent 4 }}
     {{- toYaml .requests | nindent 4 }}
   {{- end }}

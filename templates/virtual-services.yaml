@@ -7,12 +7,17 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: {{ .Values.istio.grafana.virtualServiceName }}
+  namespace: {{ include "observability.namespace" . }}
 spec:
-  gateways:
-  - {{ .Values.istio.gateway }}
-  {{- with .Values.istio.destinationHost }}
-  hosts:
+  {{- with .Values.istio.gateway }}
   {{- if . }}
+  gateways:
+  - {{ . }}  
+  {{- end }}
+  {{- end }}
+  {{- with .Values.istio.destinationHost }}
+  {{- if . }}
+  hosts:
   - {{ . }}  
   {{- end }}
   {{- end }}
@@ -39,12 +44,17 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: {{ .Values.istio.kibana.virtualServiceName }}
+  namespace: {{ include "observability.namespace" . }}
 spec:
-  gateways:
-  - {{ .Values.istio.gateway }}
-  {{- with .Values.istio.destinationHost }}
-  hosts:
+  {{- with .Values.istio.gateway }}
   {{- if . }}
+  gateways:
+  - {{ . }}  
+  {{- end }}
+  {{- end }}
+  {{- with .Values.istio.destinationHost }}
+  {{- if . }}
+  hosts:
   - {{ . }}  
   {{- end }}
   {{- end }}

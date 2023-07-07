@@ -32,7 +32,7 @@ dependencies:
   version: 0.62.0
   repository: https://open-telemetry.github.io/opentelemetry-helm-charts
   alias: otlp-independent-collector
-  condition: otlp-collector.enabled
+  condition: otlp-independent-collector.enabled
 - name: grafana
   version: 6.57.4
   repository: https://grafana.github.io/helm-charts

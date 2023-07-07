@@ -7,6 +7,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: {{ .Values.istio.grafana.ruleName }} 
+  namespace: {{ include "observability.namespace" . }}
 spec:
   host: {{ .Values.istio.grafana.host }}
   subsets:
@@ -24,6 +25,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: {{ .Values.istio.kibana.ruleName }} 
+  namespace: {{ include "observability.namespace" . }}
 spec:
   host: {{ .Values.istio.kibana.host }}
   subsets:
