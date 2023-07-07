@@ -296,6 +296,7 @@ jaeger-stack:
   # - https://github.com/jaegertracing/helm-charts/blob/main/charts/jaeger/values.yaml
   #
   # Overall architecture with a brief explanation: https://www.jaegertracing.io/docs/1.46/architecture/
+  enabled: true
   provisionDataStore:
     kafka: true
     cassandra: false
