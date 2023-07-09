@@ -1166,6 +1166,9 @@ elastic-eck-stk:
             securityContext:
               runAsUser: 0
       http:
+        service:
+          spec:
+            type: ClusterIP
         tls:
           selfSignedCertificate:
             disabled: true
