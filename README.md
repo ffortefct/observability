@@ -23,9 +23,11 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
 - [Exposed Services](#exposed-services)
   - [DNS Names](#dns-names)
   - [Istio Gateway](#istio-gateway)
+- [OpenTelemetry Collector](#opentelemetry-collector)
+  - [Independent](#independent)
+  - [Sidecar Container](#sidecar-container)
 - [Fine-tune](#fine-tune)
   - [Resources](#resources)
-  - [OpenTelemetry Sidecar Collector](#opentelemetry-sidecar-collector)
   - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
 
 ## Prerequisites
@@ -95,7 +97,7 @@ helm install -n observability --create-namespace \
 
 ### Tracing System
 
-As mentioned previously, it can collect spans through sidecar containers or by a set of independently deployed collectors (DaemonSet by default).
+As mentioned previously, it's possible to collect spans through OpenTelemetry sidecar containers or by a set of independently deployed collectors (DaemonSet by default).
 
 In turn, those collectors forward the spans to the Jaeger Collector and runs them through a processing pipeline (validates and performs transformations). After that, it publishes them in Kafka so the Injester can read, index and store in the storage backend, Elasticsearch (independent of the one used by the ECK stack).
 
@@ -140,10 +142,13 @@ Those are the main exposed services:
 
 TODO
 
+## OpenTelemetry Collector
 
-## Fine-tune
+### Independent
 
-### OpenTelemetry Sidecar Collector
+Set `otlp-independent-collector.enabled` to true.
+
+### Sidecar Container
 
 Sidecar collectors prevents from the case when one or more independent collectors are down, blocking the traffic of spans to its destination. There's a good [explanation](https://opentelemetry.io/docs/collector/scaling/#scaling-stateless-collectors) about this in the OpenTelemetry documentation.
 If you intend to use this approach, you can simply enable it by setting `otlpSidecarCollector.enabled` to true. After that, set the annotation `sidecar.opentelemetry.io/inject: "observability/<otlpSidecarCollector.name>"` in the pods that you want to inject the collector like the following example:
@@ -173,6 +178,10 @@ spec:
 ```
 
 You can also add the annotation to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation for this annotation.
+
+It's possible to have both kinds of collectors at the same time. The spans will be forwarded to the Jaeger collector.
+
+## Fine-tune
 
 ### Resources
 
