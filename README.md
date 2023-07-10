@@ -24,6 +24,9 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
   - [DNS Names](#dns-names)
   - [Istio Gateway](#istio-gateway)
 - [Fine-tune](#fine-tune)
+  - [Resources](#resources)
+  - [OpenTelemetry Sidecar Collector](#opentelemetry-sidecar-collector)
+  - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
 
 ## Prerequisites
 
@@ -122,16 +125,63 @@ The current settings aren't prepared for a production environment. See the [Fine
 
 ### DNS Names
 
-TODO
+Those are the main exposed services:
+
+- elasticsearch-eck-stk-es-http.observability.svc:9200
+- otlp-independent-collector.observability.svc:4317|4318
+  - 4317: gRPC
+  - 4318: HTTP
+- grafana.observability.svc:8080
+- kibana-kb-http.observability.svc:5601
+
+**Note:** in order to access the OpenTelemetry sidecar collector you can simply use the localhost.
 
 ### Istio Gateway
 
 TODO
 
+
 ## Fine-tune
+
+### OpenTelemetry Sidecar Collector
+
+Sidecar collectors prevents from the case when one or more independent collectors are down, blocking the traffic of spans to its destination. There's a good [explanation](https://opentelemetry.io/docs/collector/scaling/#scaling-stateless-collectors) about this in the OpenTelemetry documentation.
+If you intend to use this approach, you can simply enable it by setting `otlpSidecarCollector.enabled` to true. After that, set the annotation `sidecar.opentelemetry.io/inject: "observability/<otlpSidecarCollector.name>"` in the pods that you want to inject the collector like the following example:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+  labels:
+    app: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      annotations:
+        sidecar.opentelemetry.io/inject: "observability/otlp-sidecar-collector"
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: my-app-image:latest
+```
+
+You can also add the annotation to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation for this annotation.
+
+### Resources
 
 TODO
 
-TODO notes:
+notes:
   - increase fleet server number of replicas when the number of k8s nodes increase.
+
+### Elasticsearch Virtual Memory
+
+TODO
 
