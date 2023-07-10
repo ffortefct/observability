@@ -1,5 +1,10 @@
 Installed release {{ .Release.Name }} in namespace {{ .Release.Namespace }}.
+{{- if and
+  (index .Values "elastic-eck-stk" "enabled")
+  (index .Values "elastic-eck-stk" "eck-elasticsearch" "enabled")
+}}
 
 Get the Elasticsearch password by running this (username is elastic):
-  kubectl get -n observability secret elasticsearch-eck-stk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+  kubectl get -n {{ include "observability.namespace" . }} secret {{ index .Values "elastic-eck-stk" "eck-elasticsearch" "fullnameOverride" }}-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+{{- end }}
 
