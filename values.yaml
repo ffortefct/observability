@@ -1,6 +1,6 @@
 istio:
-  # Define gateway and/or destinationHost
-  # or ignore if you pretend not to use.
+  # Define gateway and/or destinationHost or ignore if you pretend not to use. If the gateway is deployed
+  # in a different namespace you must use the format <namespace>/<gateway-name> in the gateway field.
   gateway: ""
   # Host passed to hosts field: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
   destinationHost: ""
@@ -47,7 +47,7 @@ elastic-jg-stk:
     http:
       service:
         spec:
-          type: LoadBalancer
+          type: ClusterIP
       tls:
         selfSignedCertificate:
           disabled: true
@@ -57,7 +57,7 @@ elastic-jg-stk:
       config:
         node.roles: ["master"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -88,7 +88,7 @@ elastic-jg-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -97,7 +97,7 @@ elastic-jg-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -114,7 +114,7 @@ elastic-jg-stk:
       config:
         node.roles: ["data_hot", "data_content", "ingest"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -145,7 +145,7 @@ elastic-jg-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -154,7 +154,7 @@ elastic-jg-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -171,7 +171,7 @@ elastic-jg-stk:
       config:
         node.roles: ["data_warm"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -202,7 +202,7 @@ elastic-jg-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -211,7 +211,7 @@ elastic-jg-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -228,7 +228,7 @@ elastic-jg-stk:
       config:
         node.roles: ["data_cold"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -259,7 +259,7 @@ elastic-jg-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -268,7 +268,7 @@ elastic-jg-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -347,9 +347,6 @@ jaeger-stack:
     podAnnotations:
       sidecar.istio.io/inject: "false"
     autoCreateTopicsEnable: true
-    externalAccess:
-      service:
-        type: LoadBalancer
     persistence:
       enabled: true
       # Adjust to your storage class name.
@@ -435,7 +432,7 @@ jaeger-stack:
       minReplicas: 1
       maxReplicas: 2
     service:
-      type: LoadBalancer
+      type: ClusterIP
       otlp:
         grpc:
           name: otlp-grpc
@@ -463,7 +460,7 @@ jaeger-stack:
       enabled: false
     replicaCount: 1
     service:
-      type: LoadBalancer
+      type: ClusterIP
       port: 8080
     resources:
       limits:
@@ -689,8 +686,6 @@ otlp-independent-collector:
     failureThreshold: 5
   service:
     enabled: true
-    # Don't change to LoadBalancer, unless
-    # you pretend to use the deployment mode.
     type: ClusterIP
 
 
@@ -744,7 +739,7 @@ grafana:
   # grafana.ini:
   #   server:
   #     # Insert the same domain as istio.destinationHost
-  #     domain: ""
+  #     domain: "<destination-host>"
   #     root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
   #     serve_from_sub_path: true
   podAnnotations:
@@ -794,7 +789,7 @@ elastic-eck-stk:
     http:
       service:
         spec:
-          type: LoadBalancer
+          type: ClusterIP
       tls:
         selfSignedCertificate:
           disabled: true
@@ -804,7 +799,7 @@ elastic-eck-stk:
       config:
         node.roles: ["master"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -835,7 +830,7 @@ elastic-eck-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -844,7 +839,7 @@ elastic-eck-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -861,7 +856,7 @@ elastic-eck-stk:
       config:
         node.roles: ["data_hot", "data_content", "ingest"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -892,7 +887,7 @@ elastic-eck-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -901,7 +896,7 @@ elastic-eck-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -918,7 +913,7 @@ elastic-eck-stk:
       config:
         node.roles: ["data_warm"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -949,7 +944,7 @@ elastic-eck-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -958,7 +953,7 @@ elastic-eck-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -975,7 +970,7 @@ elastic-eck-stk:
       config:
         node.roles: ["data_cold"]
         # Remove/comment in a production environment (it's true by default).
-        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+        # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
         node.store.allow_mmap: false
       podTemplate:
         metadata:
@@ -1006,7 +1001,7 @@ elastic-eck-stk:
                 cpu: 1
                 memory: 2Gi
           # Uncomment in a prodution environment.
-          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html 
+          # Please read this: https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html
           # initContainers:
           # - command:
           #   - sh
@@ -1015,7 +1010,7 @@ elastic-eck-stk:
           #   name: sysctl
           #   securityContext:
           #     privileged: true
-          #     runAsUser: 0   
+          #     runAsUser: 0
       volumeClaimTemplates:
       - metadata:
           name: elasticsearch-data
@@ -1071,7 +1066,10 @@ elastic-eck-stk:
         # This depends on the namespace where ECK stack is being deployed. 
         xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-eck-stk-es-http.observability.svc:9200"]
         xpack.fleet.agents.fleet_server.hosts: ["http://fleet-server-agent-http.observability.svc:8220"]
-        # Uncomment if you going to use Istio Gateway.
+        # Uncomment if you going to use Istio Gateway. In the destination-host
+        # field place the same as the one set in istio config section. You cant
+        # end the path with a slash in both fields - publicBaseUrl and basePath.
+        # server.publicBaseUrl: "https://<destination-host>/observability/kibana"
         # server.basePath: "/observability/kibana"
         xpack.fleet.packages:
         - name: system
