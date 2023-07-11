@@ -30,6 +30,7 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
   - [Probes](#probes)
   - [Scaling, Resources and Storage](#scaling%2C-resources-and-storage)
   - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
+  - [Jaeger Index Auto Cleaner and Rollover](#jaeger-index-auto-cleaner-and-rollover)
 
 ## Prerequisites
 
@@ -143,7 +144,7 @@ Those are the main exposed services:
 
 Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service and match their configs (see the `values.yaml` file to know more).
 
-This chart uses the api version `networking.istio.io/v1beta1` to deploy the virtual services and destination rules.
+This chart uses the api version `networking.istio.io/v1beta1` to deploy the virtual services and destination rules and assumes that Istio is ready to use.
 
 ## OpenTelemetry Collector
 
@@ -241,4 +242,7 @@ podTemplate:
         runAsUser: 0
 ...
 ```
+### Jaeger Index Auto Cleaner and Rollover
+
+TODO
 
