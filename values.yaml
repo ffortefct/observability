@@ -699,7 +699,7 @@ grafana:
   # automatically in grafana-user's secret.
   username: grafana
   password: changeme
-  replicas: 1 
+  replicas: 1
   livenessProbe:
     initialDelaySeconds: 20
     periodSeconds: 10
@@ -747,7 +747,8 @@ grafana:
   podLabels:
     version: v1
   admin:
-    # Created automatically.
+    # The chart depends on those
+    # values to create the secret.
     existingSecret: grafana-user
     userKey: username
     passwordKey: password
@@ -757,6 +758,10 @@ kube-state-metrics:
   # Values:
   # - https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics/5.8.1
   # - https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-state-metrics/values.yaml
+  #
+  # Note: don't change fullnameOverride and service.port since the elastic
+  # agent tries to access the address kube-state-metrics:8080 by default.
+  enabled: true
   fullnameOverride: kube-state-metrics
   image:
     registry: registry.k8s.io
