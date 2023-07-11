@@ -107,8 +107,7 @@ Given the Jaeger Query, you can use Grafana to visualize the produced traces.
 
 There're two CronJobs in charge of maintain the backend storage:
   - **Index Cleaner**: garbage collects older indexes based on a given schedule;
-  - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions (passed by an environment variable - CONDITIONS). See the [Rollover API](https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#indices-rollover-index) to know how to create conditions that meet your intentions.
-
+  - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions.
 Schedules of both components follow the [Kubernetes Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
 
 ### General Purpose ECK Stack
@@ -244,5 +243,7 @@ podTemplate:
 ```
 ### Jaeger Index Auto Cleaner and Rollover
 
-TODO
+Adapt the schedule of both CronJobs (`jaeger-stack.esIndexCleaner.schedule` and `jaeger-stack.esRollover.schedule`) and set `jaeger-stack.esIndexCleaner.numberOfDays` which tells to remove indexes that are older than that value.
+
+Conditions for Rollover are set in the environment variable `CONDITIONS` under the field `jaeger-stack.esRollover.extraEnv`. See the [Rollover API Request body](https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#rollover-index-api-request-body) `conditions` specification to know more.
 
