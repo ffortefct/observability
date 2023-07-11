@@ -27,6 +27,7 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
   - [Independent](#independent)
   - [Sidecar Container](#sidecar-container)
 - [Fine-tune](#fine-tune)
+  - [Probes](#probes)
   - [Resources](#resources)
   - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
 
@@ -107,7 +108,7 @@ There're two CronJobs in charge of maintain the backend storage:
   - **Index Cleaner**: garbage collects older indexes based on a given schedule;
   - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions (passed by an environment variable - CONDITIONS). See the [Rollover API](https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#indices-rollover-index) to know how to create conditions that meet your intentions.
 
-Schedules of both components follow the Kubernetes [Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
+Schedules of both components follow the [Kubernetes Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
 
 ### General Purpose ECK Stack
 
@@ -148,7 +149,7 @@ This chart uses the api version `networking.istio.io/v1beta1` to deploy the virt
 
 ### Independent
 
-Set `otlp-independent-collector.enabled` to true.
+Set `otlp-independent-collector.enabled` to true if you want to use it.
 
 ### Sidecar Container
 
@@ -181,9 +182,13 @@ spec:
 
 You can also add the annotation to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation for this annotation.
 
-It's possible to have both kinds of collectors at the same time. The spans will be forwarded to the Jaeger collector.
+It's possible to have both kinds of collectors at the same time.
 
 ## Fine-tune
+
+### Probes
+
+For almost every component you can adjust liveness and readiness probes (Elasticsearch and Kibana have only readiness probe).
 
 ### Resources
 
@@ -194,5 +199,26 @@ notes:
 
 ### Elasticsearch Virtual Memory
 
-TODO
+Elasticsearch uses [mmap](https://en.wikipedia.org/wiki/Mmap) for efficiency purposes on accessing indexes. Seemingly, the default value used for the virtual address space on Linux Distributions is too low for Elasticsearch to run properly. So you should do the following for every node set in `elastic-jg-stk.eck-elasticsearch` and `elastic-eck-stk.eck-elasticsearch`:
+
+```yaml
+...
+config:
+  # Comment/remove it:
+  node.store.allow_mmap: false
+...
+podTemplate:
+  spec:
+    # Uncomment this:
+    initContainers:
+    - command:
+      - sh
+      - "-c"
+      - sysctl -w vm.max_map_count=262144
+      name: sysctl
+      securityContext:
+        privileged: true
+        runAsUser: 0
+...
+```
 
