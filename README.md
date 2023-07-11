@@ -73,7 +73,7 @@ helm install -n opentelemetry-operator-system --create-namespace \
   opentelemetry-system open-telemetry/opentelemetry-operator
 ```
 
-The installation process shown above automatically generates a certificate so the API server can access the webhook component. There're other ways to install. Take a look at the [TLS Certificate Requirement](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement) section in the Operator chart directory.
+The installation process shown above automatically generates a certificate so the API server can access the webhook component. There're other ways to install. Take a look at the [TLS Certificate Requirement](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement) section in the Operator chart description.
 
 ## Installing the Chart
 
@@ -140,7 +140,9 @@ Those are the main exposed services:
 
 ### Istio Gateway
 
-TODO
+Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service and match their configs (see the `values.yaml` file to know more).
+
+This chart uses the api version `networking.istio.io/v1beta1` to deploy the virtual services and destination rules.
 
 ## OpenTelemetry Collector
 
