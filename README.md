@@ -28,7 +28,7 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
   - [Sidecar Container](#sidecar-container)
 - [Fine-tune](#fine-tune)
   - [Probes](#probes)
-  - [Resources](#resources)
+  - [Scaling, Resources and Storage](#scaling%2C-resources-and-storage)
   - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
 
 ## Prerequisites
@@ -190,12 +190,32 @@ It's possible to have both kinds of collectors at the same time.
 
 For almost every component you can adjust liveness and readiness probes (Elasticsearch has only readiness probe and Kibana doesn't have anything).
 
-### Resources
+### Scaling, Resources and Storage
 
-TODO
+It is important to adjust the resources field in every possible component of the architecture. By default, the values defined in `resources.limits` and `resources.requests` are the minimum required in order to run normally.
 
-notes:
-  - increase fleet server number of replicas when the number of k8s nodes increase.
+```yaml
+# Jaeger collector example:
+jaeger-stack:
+  collector:
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+```
+
+All components are deployed with only one replica which is undesirable in a production environment.
+
+In each Elasticsearch cluster (general purpose and Jaeger backend storage), the number of replicas and storage size per node set needs to be adjusted according to their assigned rule(s). The size of each persistent volume and amount of cpu+memory (`resources` field) is proportional to the assigned rule (e.g, `data_warm` replicas requires more storage and less resources, while `data_hot` replicas are the opposite).
+
+If the amount of Kubernetes nodes is considerable, then you should increase the number of replicas of Kube State Metrics in `kube-state-metrics.replicas`.
+
+In order to use a different storage class other than the default, you should set `storageClassName` and `storageClass` fields.
+
+Jaeger injester and collector can be auto scaled if you set `jaeger-stack.injester.autoScaling.enabled` and `jaeger-stack.collector.autoScaling.enabled` to true. It's also possible to adjust the minimum and maximum number of replicas with `minReplicas` and `maxReplicas`.
 
 ### Elasticsearch Virtual Memory
 
