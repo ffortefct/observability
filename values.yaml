@@ -496,7 +496,7 @@ jaeger-stack:
     initHook:
       annotations:
         # Needs to wait for jaeger-stack-elasticsearch secret to be created.
-        # It seems a bug since this isn't supposed to be set this way.
+        # It seems a bug since this isn't supposed to be set.
         "helm.sh/hook": post-install,post-upgrade
       podAnnotations:
         sidecar.istio.io/inject: "false"
@@ -527,7 +527,7 @@ jaeger-stack:
     initHook:
       annotations:
         # Needs to wait for jaeger-stack-elasticsearch secret to be created.
-        # It seems a bug since this isn't supposed to be set this way.
+        # It seems a bug since this isn't supposed to be set.
         "helm.sh/hook": post-install,post-upgrade
       podAnnotations:
         sidecar.istio.io/inject: "false"
