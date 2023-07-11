@@ -508,6 +508,7 @@ jaeger-stack:
     tag: latest
     extraEnv:
     - name: CONDITIONS
+      # See more in conditions field specification: https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#rollover-index-api-request-body
       value: '{"max_age": "1d"}'
     # Format: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax
     schedule: "10 0 * * *"
