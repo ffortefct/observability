@@ -23,7 +23,14 @@ Keep in mind that the architecture isn't limited its predefined structure. You m
 - [Exposed Services](#exposed-services)
   - [DNS Names](#dns-names)
   - [Istio Gateway](#istio-gateway)
+- [OpenTelemetry Collector](#opentelemetry-collector)
+  - [Independent](#independent)
+  - [Sidecar Container](#sidecar-container)
 - [Fine-tune](#fine-tune)
+  - [Probes](#probes)
+  - [Scaling, Resources and Storage](#scaling%2C-resources-and-storage)
+  - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
+  - [Jaeger Index Auto Cleaner and Rollover](#jaeger-index-auto-cleaner-and-rollover)
 
 ## Prerequisites
 
@@ -68,7 +75,7 @@ helm install -n opentelemetry-operator-system --create-namespace \
   opentelemetry-system open-telemetry/opentelemetry-operator
 ```
 
-The installation process shown above automatically generates a certificate so the API server can access the webhook component. There're other ways to install. Take a look at the [TLS Certificate Requirement](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement) section in the Operator chart directory.
+The installation process shown above automatically generates a certificate so the API server can access the webhook component. There're other ways to install. Take a look at the [TLS Certificate Requirement](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement) section in the Operator chart description.
 
 ## Installing the Chart
 
@@ -92,7 +99,7 @@ helm install -n observability --create-namespace \
 
 ### Tracing System
 
-As mentioned previously, it can collect spans through sidecar containers or by a set of independently deployed collectors (DaemonSet by default).
+As mentioned previously, it's possible to collect spans through OpenTelemetry sidecar containers or by a set of independently deployed collectors (DaemonSet by default).
 
 In turn, those collectors forward the spans to the Jaeger Collector and runs them through a processing pipeline (validates and performs transformations). After that, it publishes them in Kafka so the Injester can read, index and store in the storage backend, Elasticsearch (independent of the one used by the ECK stack).
 
@@ -100,13 +107,12 @@ Given the Jaeger Query, you can use Grafana to visualize the produced traces.
 
 There're two CronJobs in charge of maintain the backend storage:
   - **Index Cleaner**: garbage collects older indexes based on a given schedule;
-  - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions (passed by an environment variable - CONDITIONS). See the [Rollover API](https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#indices-rollover-index) to know how to create conditions that meet your intentions.
-
-Schedules of both components follow the Kubernetes [Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
+  - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions.
+Schedules of both components follow the [Kubernetes Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
 
 ### General Purpose ECK Stack
 
-All data sent to Elasticsearch can be visualized on Kibana.
+All data sent to Elasticsearch can be visualized in Kibana.
 
 There're Elastic Agents (deployed as a DaemonSet in every Kubernetes cluster node) which collect cluster metrics from a Kube State Metrics instance. Those agents are managed by a Fleet Server. You can manage those agents through Kibana.
 
@@ -122,16 +128,122 @@ The current settings aren't prepared for a production environment. See the [Fine
 
 ### DNS Names
 
-TODO
+Those are the main exposed services:
+
+- elasticsearch-eck-stk-es-http.observability.svc:9200
+- otlp-independent-collector.observability.svc:4317|4318
+  - 4317: gRPC
+  - 4318: HTTP
+- grafana.observability.svc:8080
+- kibana-kb-http.observability.svc:5601
+
+**Note:** in order to access the OpenTelemetry sidecar collector you can simply use the localhost.
 
 ### Istio Gateway
 
-TODO
+Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service and match their configs (see the `values.yaml` file to know more).
+
+This chart uses the api version `networking.istio.io/v1beta1` to deploy the virtual services and destination rules and assumes that Istio is ready to use.
+
+## OpenTelemetry Collector
+
+### Independent
+
+Set `otlp-independent-collector.enabled` to true if you want to use it.
+
+### Sidecar Container
+
+Sidecar collectors prevents from the case when one or more independent collectors are down, blocking the traffic of spans to its destination. There's a good [explanation](https://opentelemetry.io/docs/collector/scaling/#scaling-stateless-collectors) about this in the OpenTelemetry documentation.
+If you intend to use this approach, you can simply enable it by setting `otlpSidecarCollector.enabled` to true. After that, set the annotation `sidecar.opentelemetry.io/inject: "observability/<otlpSidecarCollector.name>"` in the pods that you want to inject the collector like the following example:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+  labels:
+    app: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      annotations:
+        sidecar.opentelemetry.io/inject: "observability/otlp-sidecar-collector"
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: my-app-image:latest
+```
+
+You can also add the annotation to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation for this annotation.
+
+It's possible to have both kinds of collectors at the same time.
 
 ## Fine-tune
 
-TODO
+### Probes
 
-TODO notes:
-  - increase fleet server number of replicas when the number of k8s nodes increase.
+For almost every component you can adjust liveness and readiness probes (Elasticsearch has only readiness probe and Kibana doesn't have anything).
+
+### Scaling, Resources and Storage
+
+It is important to adjust the resources field in every possible component of the architecture. By default, the values defined in `resources.limits` and `resources.requests` are the minimum required in order to run normally.
+
+```yaml
+# Jaeger collector example:
+jaeger-stack:
+  collector:
+    resources:
+      limits:
+        cpu: 1
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+```
+
+All components are deployed with only one replica which is undesirable in a production environment.
+
+In each Elasticsearch cluster (general purpose and Jaeger backend storage), the number of replicas and storage size per node set needs to be adjusted according to their assigned rule(s). The size of each persistent volume and amount of cpu+memory (`resources` field) is proportional to the assigned rule (e.g, `data_warm` replicas requires more storage and less resources, while `data_hot` replicas are the opposite).
+
+If the amount of Kubernetes nodes is considerable, then you should increase the number of replicas of Kube State Metrics in `kube-state-metrics.replicas`.
+
+In order to use a different storage class other than the default, you should set `storageClassName` and `storageClass` fields.
+
+Jaeger injester and collector can be auto scaled if you set `jaeger-stack.injester.autoScaling.enabled` and `jaeger-stack.collector.autoScaling.enabled` to true. It's also possible to adjust the minimum and maximum number of replicas with `minReplicas` and `maxReplicas`.
+
+### Elasticsearch Virtual Memory
+
+Elasticsearch uses [mmap](https://en.wikipedia.org/wiki/Mmap) for efficiency purposes on accessing indexes. Seemingly, the default value used for the virtual address space on Linux Distributions is too low for Elasticsearch to run properly. So you should do the following for every node set in `elastic-jg-stk.eck-elasticsearch` and `elastic-eck-stk.eck-elasticsearch`:
+
+```yaml
+...
+config:
+  # Comment/remove it:
+  node.store.allow_mmap: false
+...
+podTemplate:
+  spec:
+    # Uncomment this:
+    initContainers:
+    - command:
+      - sh
+      - "-c"
+      - sysctl -w vm.max_map_count=262144
+      name: sysctl
+      securityContext:
+        privileged: true
+        runAsUser: 0
+...
+```
+### Jaeger Index Auto Cleaner and Rollover
+
+Adapt the schedule of both CronJobs (`jaeger-stack.esIndexCleaner.schedule` and `jaeger-stack.esRollover.schedule`) and set `jaeger-stack.esIndexCleaner.numberOfDays` which tells to remove indexes that are older than that value.
+
+Conditions for Rollover are set in the environment variable `CONDITIONS` under the field `jaeger-stack.esRollover.extraEnv`. See the [Rollover API Request body](https://www.elastic.co/guide/en/elasticsearch/reference/master/indices-rollover-index.html#rollover-index-api-request-body) `conditions` specification to know more.
 
