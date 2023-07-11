@@ -188,7 +188,7 @@ It's possible to have both kinds of collectors at the same time.
 
 ### Probes
 
-For almost every component you can adjust liveness and readiness probes (Elasticsearch have only readiness probe and Kibana doesn't have anything).
+For almost every component you can adjust liveness and readiness probes (Elasticsearch has only readiness probe and Kibana doesn't have anything).
 
 ### Resources
 
