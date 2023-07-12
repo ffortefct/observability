@@ -234,13 +234,13 @@ jaeger-stack:
 
 All components are deployed with only one replica which is undesirable in a production environment.
 
-In each Elasticsearch cluster (general purpose and Jaeger backend storage), the number of replicas and storage size per node set needs to be adjusted according to their assigned rule(s). The size of each persistent volume and amount of cpu+memory (`resources` field) is proportional to the assigned rule (e.g, `data_warm` replicas requires more storage and less resources, while `data_hot` replicas are the opposite).
+In each Elasticsearch cluster (general purpose and Jaeger backend storage), the number of replicas and storage size per node set needs to be adjusted according to their assigned rule(s). The size of each persistent volume and amount of cpu+memory (`resources` field) depends on the assigned rule (e.g, `data_warm` replicas requires more storage and less resources, while `data_hot` replicas are the opposite).
 
 If the amount of Kubernetes nodes is considerable, then you should increase the number of replicas of Kube State Metrics in `kube-state-metrics.replicas`.
 
 In order to use a different storage class other than the default, you should set `storageClassName` and `storageClass` fields.
 
-Jaeger injester and collector can be auto scaled if you set `jaeger-stack.injester.autoScaling.enabled` and `jaeger-stack.collector.autoScaling.enabled` to true. It's also possible to adjust the minimum and maximum number of replicas with `minReplicas` and `maxReplicas`.
+Jaeger injester and collector can be auto scaled if you set `jaeger-stack.injester.autoScaling.enabled` and `jaeger-stack.collector.autoScaling.enabled` to true. You can also adjust the minimum and maximum number of replicas with `minReplicas` and `maxReplicas`.
 
 ### Elasticsearch Virtual Memory
 
