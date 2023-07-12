@@ -8,10 +8,10 @@ Both Kibana and Grafana can be exposed with an Istio Gateway.
 
 The architecture isn't limited to its current structure. You can extend and modify the way you want.
 
-## Table Of Contents
+## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Installing the Operator(s)](#installing-the-operator(s))
+- [Installing the Operators](#installing-the-operators)
   - [ECK](#eck)
   - [OpenTelemetry](#opentelemetry)
 - [Installing the Chart](#installing-the-chart)
@@ -27,11 +27,11 @@ The architecture isn't limited to its current structure. You can extend and modi
   - [Independent](#independent)
   - [Sidecar Container](#sidecar-container)
 - [Credentials](#credentials)
-  - [Elasticsearch/Kibana - General Purpose Stack](#elasticsearch%2Fkibana---general-purpose-stack)
+  - [Elasticsearch and Kibana in General Purpose Stack](#elasticsearch-and-kibana-in-general-purpose-stack)
   - [Grafana](#grafana)
 - [Fine-tune](#fine-tune)
   - [Probes](#probes)
-  - [Scaling, Resources and Storage](#scaling%2C-resources-and-storage)
+  - [Resources and Storage](#resources-and-storage)
   - [Elasticsearch Virtual Memory](#elasticsearch-virtual-memory)
   - [Jaeger Index Auto Cleaner and Rollover](#jaeger-index-auto-cleaner-and-rollover)
 
@@ -42,7 +42,7 @@ The architecture isn't limited to its current structure. You can extend and modi
 - ECK Operator
 - OpenTelemetry Operator (optional - necessary for sidecar collectors)
 
-## Installing the Operator(s)
+## Installing the Operators
 
 ### ECK
 
@@ -214,7 +214,7 @@ It's possible to have both kinds of collectors at the same time. They won't inte
 
 ## Credentials
 
-### Elasticsearch/Kibana - General Purpose Stack
+### Elasticsearch and Kibana in General Purpose Stack
 
 By default, the username is `elastic` and the password is generated automatically. You can access it with the following command:
 
@@ -232,7 +232,7 @@ Both username and password are set in the fields `grafana.username` and `grafana
 
 For almost every component you can adjust liveness and readiness probes (Elasticsearch has only readiness probe and Kibana doesn't have anything).
 
-### Scaling, Resources and Storage
+### Resources and Storage
 
 It is important to adjust the resources field in every possible component of the architecture. By default, the values defined in `resources.limits` and `resources.requests` are the minimum required in order to run normally.
 
