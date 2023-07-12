@@ -142,7 +142,7 @@ Those are the main exposed services:
 
 ### Istio Gateway
 
-Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service and match their configs (see the `values.yaml` file to know more).
+Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service to match their configs.
 
 Besides that, you need to uncomment the following parts and set `<destination-host>` with the same host as in `istio.destinationHost`:
 
