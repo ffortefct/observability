@@ -1,12 +1,12 @@
 # Observability Architecture Helm Chart
 
-This model is designed to collect spans through OpenTelemetry independent collectors (DaemonSets by default) and/or side car collectors. Those traces can be later explored  in Grafana.
+This model is designed to collect spans through OpenTelemetry independent collectors and/or sidecar collectors. Those traces can be later explored in Grafana.
 
-There's also a collection of Elasticsearch nodes for general purpose and an Elastic Agent to scrape cluster metrics through a Kube State Metrics instance whose data can be visualized in Kibana.
+There's also a collection of Elasticsearch nodes for general purpose and Elastic Agents to scrape cluster metrics through a Kube State Metrics instance whose data can be visualized in Kibana.
 
-Both Kibana and Grafana can be exposed with a Istio Gateway.
+Both Kibana and Grafana can be exposed with an Istio Gateway.
 
-Keep in mind that the architecture isn't limited its predefined structure. You modify the way you want. It was made with extensibility in mind.
+The architecture isn't limited to its current structure. You can extend and modify the way you want.
 
 ## Table Of Contents
 
