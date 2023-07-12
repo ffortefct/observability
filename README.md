@@ -205,9 +205,9 @@ spec:
         image: my-app-image:latest
 ```
 
-You can also add the annotation to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation for this annotation.
+You can also add it to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation about this annotation.
 
-It's possible to have both kinds of collectors at the same time.
+It's possible to have both kinds of collectors at the same time. They won't interfere with each other.
 
 ## Fine-tune
 
