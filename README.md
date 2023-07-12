@@ -115,7 +115,7 @@ Schedules of both components follow the [Kubernetes Schedule syntax](https://kub
 
 All data sent to Elasticsearch can be visualized in Kibana.
 
-There're Elastic Agents (deployed as a DaemonSet in every Kubernetes cluster node) which collect cluster metrics from a Kube State Metrics instance. Those agents are managed by a Fleet Server. You can manage those agents through Kibana.
+There're Elastic Agents (deployed as a DaemonSet) which collect cluster metrics from a Kube State Metrics instance. Those agents are managed by a Fleet Server. This control is made through Kibana.
 
 ### Backend Storage Design
 
