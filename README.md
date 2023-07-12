@@ -93,7 +93,7 @@ Install the chart with its default values:
 
 ```sh
 helm install -n observability --create-namespace \
-  observability-architecture observability/architecture
+  observability-architecture observability/observability-architecture
 ```
 
 **Always use this namespace, unless you know what you're doing.**

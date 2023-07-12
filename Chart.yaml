@@ -1,5 +1,5 @@
 apiVersion: v2
-name: observability
+name: observability-architecture
 description: Observability Architecture
 keywords:
 - architecture
