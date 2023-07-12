@@ -99,15 +99,16 @@ helm install -n observability --create-namespace \
 
 ### Tracing System
 
-As mentioned previously, it's possible to collect spans through OpenTelemetry sidecar containers or by a set of independently deployed collectors (DaemonSet by default).
+As mentioned previously, it's possible to collect spans through OpenTelemetry sidecar containers or by a set of independently deployed collectors (as a DaemonSet by default).
 
-In turn, those collectors forward the spans to the Jaeger Collector and runs them through a processing pipeline (validates and performs transformations). After that, it publishes them in Kafka so the Injester can read, index and store in the storage backend, Elasticsearch (independent of the one used by the ECK stack).
+In turn, those collectors forward the spans to the Jaeger Collector and runs them through a processing pipeline (validates and performs transformations). After that, it publishes them in Kafka so the Injester can read, index and store in a storage backend - Elasticsearch (independent of the one used by the General Purpose ECK stack).
 
-Given the Jaeger Query, you can use Grafana to visualize the produced traces.
+With the Jaeger Query, you can use Grafana to visualize the produced traces.
 
 There're two CronJobs in charge of maintain the backend storage:
-  - **Index Cleaner**: garbage collects older indexes based on a given schedule;
+  - **Index Cleaner**: garbage collector for older indexes based on a given schedule;
   - **Rollover**: rolls the write alias to a new index with a given schedule on supplied conditions.
+
 Schedules of both components follow the [Kubernetes Schedule syntax](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#schedule-syntax).
 
 ### General Purpose ECK Stack
