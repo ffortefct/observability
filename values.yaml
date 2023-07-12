@@ -736,11 +736,12 @@ grafana:
         isDefault: false
         access: proxy
         editable: true
-  # Uncomment if you going to use Istio Gateway.
+  # Uncomment if you're going to use Istio Gateway.
   # grafana.ini:
   #   server:
-  #     # Insert the same domain as istio.destinationHost
+  #     # Insert the same domain as in istio.destinationHost
   #     domain: "<destination-host>"
+  #     # You can't end the path with a slash.
   #     root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
   #     serve_from_sub_path: true
   podAnnotations:
@@ -1072,9 +1073,9 @@ elastic-eck-stk:
         # This depends on the namespace where ECK stack is being deployed. 
         xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-eck-stk-es-http.observability.svc:9200"]
         xpack.fleet.agents.fleet_server.hosts: ["http://fleet-server-agent-http.observability.svc:8220"]
-        # Uncomment if you going to use Istio Gateway. In the destination-host
-        # field place the same as the one set in istio config section. You cant
-        # end the path with a slash in both fields - publicBaseUrl and basePath.
+        # Uncomment if you going to use Istio Gateway. In destination-host place
+        # the same value as in istio.destinationHost. You can't end the path with
+        # a slash in both fields - publicBaseUrl and basePath.
         # server.publicBaseUrl: "https://<destination-host>/observability/kibana"
         # server.basePath: "/observability/kibana"
         xpack.fleet.packages:
