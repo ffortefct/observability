@@ -123,7 +123,7 @@ Both Tracing System and General Purpose ECK Stack follow the same backend struct
 
 ### Scalability Considerations
 
-The current settings aren't prepared for a production environment. See the [Fine-tune](#fine-tune) section for how to extend the resources and the number of nodes per component.
+The current settings aren't prepared for a production environment. See the [Fine-tune](#fine-tune) section for how to extend the resources and adapt the architecture to your needs.
 
 ## Exposed services
 
