@@ -34,6 +34,7 @@ elastic-jg-stk:
   # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/values.yaml
   #
   # Requires the ECK Operator: https://github.com/elastic/cloud-on-k8s/tree/main/deploy
+  enabled: true
   eck-elasticsearch:
     # Values:
     # - https://github.com/elastic/cloud-on-k8s/blob/main/deploy/eck-stack/charts/eck-elasticsearch/values.yaml
