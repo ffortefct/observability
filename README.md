@@ -143,7 +143,31 @@ Those are the main exposed services:
 
 Kibana and Grafana can be exposed with an Istio Gateway by setting `istio.kibana.enabled`, `istio.grafana.enabled` to true and specify both the gateway and destination host. The host, port and path should point to the respective service and match their configs (see the `values.yaml` file to know more).
 
-This chart uses the api version `networking.istio.io/v1beta1` to deploy the virtual services and destination rules and assumes that Istio is ready to use.
+Besides that, you need to uncomment the following parts and set `<destination-host>` with the same host as in `istio.destinationHost`:
+
+```yaml
+...
+grafana:
+  grafana.ini:
+    server:
+      domain: "<destination-host>"
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/observability/grafana"
+      serve_from_sub_path: true
+...
+elastic-eck-stk:
+  eck-kibana:
+    spec:
+      config:
+        server.publicBaseUrl: "https://<destination-host>/observability/kibana"
+        server.basePath: "/observability/kibana"
+...
+```
+
+Don't forget that **the path in those fields can't end with a slash**.
+
+Templates for virtual services and destination rules use the API version `networking.istio.io/v1beta1`.
+
+The chart assumes that Istio is already installed and ready to use.
 
 ## OpenTelemetry Collector
 
