@@ -26,6 +26,9 @@ The architecture isn't limited to its current structure. You can extend and modi
 - [OpenTelemetry Collector](#opentelemetry-collector)
   - [Independent](#independent)
   - [Sidecar Container](#sidecar-container)
+- [Credentials](#credentials)
+  - [Elasticsearch/Kibana - General Purpose Stack](#elasticsearch%2Fkibana---general-purpose-stack)
+  - [Grafana](#grafana)
 - [Fine-tune](#fine-tune)
   - [Probes](#probes)
   - [Scaling, Resources and Storage](#scaling%2C-resources-and-storage)
@@ -208,6 +211,20 @@ spec:
 You can also add it to the namespace. Right after the [sidecar example](https://github.com/open-telemetry/opentelemetry-operator#sidecar-injection) in the OpenTelemetry Operator README you will find an in deep explanation about this annotation.
 
 It's possible to have both kinds of collectors at the same time. They won't interfere with each other.
+
+## Credentials
+
+### Elasticsearch/Kibana - General Purpose Stack
+
+By default, the username is `elastic` and the password is generated automatically. You can access it with the following command:
+
+```sh
+kubectl get -n observability secret elasticsearch-eck-stk-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+```
+
+### Grafana
+
+Both username and password are set in the fields `grafana.username` and `grafana.password`.
 
 ## Fine-tune
 
