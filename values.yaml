@@ -10,7 +10,8 @@ istio:
     virtualServiceName: kibana-virtual-svc
     host: kibana-kb-http.observability.svc.cluster.local
     port: 5601
-    # It must be the path defined in server.basePath and server.publicBaseUrl without the last slash.
+    # It must be the path defined in server.basePath and server.publicBaseUrl
+    # with a slash in the end.
     path: "/observability/kibana/"
   grafana:
     # Uncomment the field grafana."grafana.ini".server if you set to true.
@@ -21,7 +22,7 @@ istio:
     virtualServiceName: grafana-virtual-svc
     host: grafana.observability.svc.cluster.local
     port: 8080
-    # It must be the path defined in server.root_url without the last slash.
+    # It must be the path defined in server.root_url with a slash in the end.
     path: "/observability/grafana/"
 
 elastic-jg-stk:
